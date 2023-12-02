@@ -1,6 +1,10 @@
 package config
 
-import "errors"
+import (
+	"errors"
+
+	"konsume/pkg/common"
+)
 
 var (
 	providerNameNotDefinedError = errors.New("provider name not defined")
@@ -71,11 +75,11 @@ func (p *ProviderConfig) validateProvider() error {
 		return providerTypeNotDefinedError
 	}
 
-	if p.Type != "amqp" && p.Type != "kafka" {
+	if p.Type != common.QueueSourceRabbitMQ && p.Type != common.QueueSourceKafka {
 		return invalidProviderTypeError
 	}
 
-	if p.Type == "amqp" {
+	if p.Type == common.QueueSourceRabbitMQ {
 		if p.AMQPConfig == nil {
 			return amqpConfigNotDefinedError
 		}
@@ -86,7 +90,7 @@ func (p *ProviderConfig) validateProvider() error {
 		}
 	}
 
-	if p.Type == "kafka" {
+	if p.Type == common.QueueSourceKafka {
 		if p.KafkaConfig == nil {
 			return kafkaConfigNotDefinedError
 		}

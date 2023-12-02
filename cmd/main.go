@@ -1,24 +1,47 @@
 package main
 
 import (
+	"errors"
+	"log"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"konsume/pkg/common"
 	"konsume/pkg/config"
+	"konsume/pkg/queue"
+	"konsume/pkg/queue/rabbitmq"
+	"konsume/pkg/runner"
 )
 
 func main() {
 	slog.Info("Starting konsume")
 
-	_, err := config.LoadConfig()
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		panic(err)
 	}
 
-	//signalChannel := setupSignalHandling()
-	//waitForShutdown(signalChannel)
+	consumers := make(map[string]queue.MessageQueueConsumer)
+	for _, provider := range cfg.Providers {
+		switch provider.Type {
+		case common.QueueSourceRabbitMQ:
+			consumer := rabbitmq.NewConsumer(provider.AMQPConfig)
+			consumers[provider.Name] = consumer
+		case common.QueueSourceKafka:
+			// Kafka setup (when implemented)
+		default:
+			log.Fatalf("Unknown queue source: %s", provider.Type)
+		}
+	}
+
+	if err = runner.StartConsumers(cfg, consumers); err != nil {
+		log.Fatalf("Failed to start consumers: %s", err)
+	}
+
+	signalChannel := setupSignalHandling()
+	waitForShutdown(signalChannel)
 
 	slog.Info("Shut down gracefully")
 }
@@ -41,4 +64,13 @@ func setupSignalHandling() chan bool {
 // waitForShutdown blocks until a shutdown signal is received.
 func waitForShutdown(done chan bool) {
 	<-done
+}
+
+func getRabbitMQConfig(providers []*config.ProviderConfig) (*config.AMQPConfig, error) {
+	for _, provider := range providers {
+		if provider.Type == "amqp" {
+			return provider.AMQPConfig, nil
+		}
+	}
+	return nil, errors.New("rabbitmq config not found")
 }
