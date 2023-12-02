@@ -112,6 +112,28 @@ queues:
 			expectedError: providerNameNotDefinedError,
 		},
 		{
+			name:       "should throw error if provider type is not defined",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    routes:
+      - name: "test-route"
+        url: "http://localhost:8080"
+`,
+			},
+			expectedError: providerTypeNotDefinedError,
+		},
+		{
 			name:       "should throw error if amqp provider config is not defined",
 			configPath: "./config.yaml",
 			pathAndContent: map[string]string{
@@ -432,6 +454,56 @@ queues:
 `,
 			},
 			expectedError: urlNotDefinedError,
+		},
+		{
+			name:       "should throw error if max retries is not defined for queue retry config",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "amqp"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    retry:
+      interval: 1s
+    routes:
+      - name: "test-route"
+        url: "http://localhost:8080"
+`,
+			},
+			expectedError: maxRetriesNotDefinedError,
+		},
+		{
+			name:       "should throw error if interval is not defined for queue retry config",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "amqp"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    retry:
+      max_retries: 2
+    routes:
+      - name: "test-route"
+        url: "http://localhost:8080"
+`,
+			},
+			expectedError: intervalNotDefinedError,
 		},
 		{
 			name:       "should load config file successfully",
