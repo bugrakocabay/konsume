@@ -55,7 +55,7 @@ queues:
 				"config.yaml": `
 providers:
   - name: "test-queue"
-    type: "amqp"
+    type: "rabbitmq"
     amqp-config:
       host: "rabbitmq"
       port: 5672
@@ -95,7 +95,7 @@ queues:
 				"config.yaml": `
 providers:
   - name: ""
-    type: "invalid-type"
+    type: "rabbitmq"
     amqp-config:
       host: "rabbitmq"
       port: 5672
@@ -140,7 +140,7 @@ queues:
 				"config.yaml": `
 providers:
   - name: "test-queue"
-    type: "amqp"
+    type: "rabbitmq"
 queues:
   - name: "test"
     provider: "test-queue"
@@ -158,7 +158,7 @@ queues:
 				"config.yaml": `
 providers:
   - name: "test-queue"
-    type: "amqp"
+    type: "rabbitmq"
     amqp-config:
       port: 5672
       username: "user"
@@ -180,7 +180,7 @@ queues:
 				"config.yaml": `
 providers:
   - name: "test-queue"
-    type: "amqp"
+    type: "rabbitmq"
     amqp-config:
       host: "rabbitmq"
       username: "user"
@@ -202,7 +202,7 @@ queues:
 				"config.yaml": `
 providers:
   - name: "test-queue"
-    type: "amqp"
+    type: "rabbitmq"
     amqp-config:
       host: "rabbitmq"
       port: 5672
@@ -224,7 +224,7 @@ queues:
 				"config.yaml": `
 providers:
   - name: "test-queue"
-    type: "amqp"
+    type: "rabbitmq"
     amqp-config:
       host: "rabbitmq"
       port: 5672
@@ -331,7 +331,7 @@ queues:
 				"config.yaml": `
 providers:
   - name: "test-queue"
-    type: "amqp"
+    type: "rabbitmq"
     amqp-config:
       host: "rabbitmq"
       port: 5672
@@ -353,7 +353,7 @@ queues:
 				"config.yaml": `
 providers:
   - name: "test-queue"
-    type: "amqp"
+    type: "rabbitmq"
     amqp-config:
       host: "rabbitmq"
       port: 5672
@@ -375,7 +375,7 @@ queues:
 				"config.yaml": `
 providers:
   - name: "test-queue"
-    type: "amqp"
+    type: "rabbitmq"
     amqp-config:
       host: "rabbitmq"
       port: 5672
@@ -398,7 +398,7 @@ queues:
 				"config.yaml": `
 providers:
   - name: "test-queue"
-    type: "amqp"
+    type: "rabbitmq"
     amqp-config:
       host: "rabbitmq"
       port: 5672
@@ -418,7 +418,7 @@ queues:
 				"config.yaml": `
 providers:
   - name: "test-queue"
-    type: "amqp"
+    type: "rabbitmq"
     amqp-config:
       host: "rabbitmq"
       port: 5672
@@ -440,7 +440,7 @@ queues:
 				"config.yaml": `
 providers:
   - name: "test-queue"
-    type: "amqp"
+    type: "rabbitmq"
     amqp-config:
       host: "rabbitmq"
       port: 5672
@@ -462,7 +462,7 @@ queues:
 				"config.yaml": `
 providers:
   - name: "test-queue"
-    type: "amqp"
+    type: "rabbitmq"
     amqp-config:
       host: "rabbitmq"
       port: 5672
@@ -487,7 +487,7 @@ queues:
 				"config.yaml": `
 providers:
   - name: "test-queue"
-    type: "amqp"
+    type: "rabbitmq"
     amqp-config:
       host: "rabbitmq"
       port: 5672
@@ -512,7 +512,7 @@ queues:
 				"config.yaml": `
 providers:
   - name: "test-queue"
-    type: "amqp"
+    type: "rabbitmq"
     amqp-config:
       host: "rabbitmq"
       port: 5672
