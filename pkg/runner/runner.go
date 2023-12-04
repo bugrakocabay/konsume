@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"sync"
 
 	"konsume/pkg/config"
 	"konsume/pkg/queue"
+	"konsume/pkg/requester"
 )
 
 // StartConsumers starts the consumers for all queues
@@ -43,6 +45,16 @@ func listen(ctx context.Context, consumer queue.MessageQueueConsumer, qCfg *conf
 
 	return consumer.Consume(ctx, qCfg.Name, func(msg []byte) error {
 		log.Printf("Received message from %s: %s", qCfg.Name, string(msg))
+		for _, rCfg := range qCfg.Routes {
+			rqstr := requester.NewRequester(rCfg.URL, rCfg.Method, msg, rCfg.Headers)
+			sendRequestWithStrategy(qCfg, rCfg, msg, rqstr)
+		}
 		return nil
 	})
+}
+
+// sendRequestWithStrategy sends the request to the given endpoint and makes use of the given strategy
+func sendRequestWithStrategy(qCfg *config.QueueConfig, rCfg *config.RouteConfig, msg []byte, requester requester.HTTPRequester) {
+	resp := requester.SendRequest()
+	slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode)
 }
