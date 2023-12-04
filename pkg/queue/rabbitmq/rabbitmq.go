@@ -1,6 +1,7 @@
 package rabbitmq
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 
@@ -45,7 +46,7 @@ func (c *Consumer) Connect() error {
 }
 
 // Consume consumes messages from RabbitMQ
-func (c *Consumer) Consume(queueName string, handler func(msg []byte) error) error {
+func (c *Consumer) Consume(ctx context.Context, queueName string, handler func(msg []byte) error) error {
 	_, err := c.channel.QueueDeclare(
 		queueName, // Name of the queue
 		true,      // Durable

@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"testing"
@@ -26,7 +27,7 @@ func (m *MockMessageQueueConsumer) Connect() error {
 	return errors.New("Connect not implemented")
 }
 
-func (m *MockMessageQueueConsumer) Consume(queueName string, handler func(msg []byte) error) error {
+func (m *MockMessageQueueConsumer) Consume(ctx context.Context, queueName string, handler func(msg []byte) error) error {
 	m.ConsumeCalled = true
 	if m.ConsumeFunc != nil {
 		return m.ConsumeFunc(queueName, handler)
@@ -74,8 +75,8 @@ func TestListen(t *testing.T) {
 		ConnectFunc: func() error { return nil },
 		ConsumeFunc: func(queueName string, handler func(msg []byte) error) error { return nil },
 	}
-
-	err := listen(mockConsumer, qCfg)
+	ctx := context.Background()
+	err := listen(ctx, mockConsumer, qCfg)
 	if err != nil {
 		t.Errorf("listen() error = %v, wantErr %v", err, nil)
 	}
