@@ -19,7 +19,7 @@ var (
 
 	kafkaConfigNotDefinedError = errors.New("kafka config not defined")
 	brokersNotDefinedError     = errors.New("brokers not defined")
-	topicsNotDefinedError      = errors.New("topics not defined")
+	topicNotDefinedError       = errors.New("topics not defined")
 	groupNotDefinedError       = errors.New("group not defined")
 )
 
@@ -58,8 +58,8 @@ type KafkaConfig struct {
 	// Brokers is a list of brokers that will be consumed
 	Brokers []string `yaml:"brokers,omitempty"`
 
-	// Topics is a list of topics that will be consumed
-	Topics []string `yaml:"topics,omitempty"`
+	// Topic is a list of topics that will be consumed
+	Topic string `yaml:"topic,omitempty"`
 
 	// Group is the consumer group that will be used
 	Group string `yaml:"group,omitempty"`
@@ -131,8 +131,8 @@ func (k *KafkaConfig) validateKafkaConfig() error {
 		return brokersNotDefinedError
 	}
 
-	if len(k.Topics) == 0 {
-		return topicsNotDefinedError
+	if len(k.Topic) == 0 {
+		return topicNotDefinedError
 	}
 
 	if len(k.Group) == 0 {
