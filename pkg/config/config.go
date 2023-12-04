@@ -44,6 +44,7 @@ func LoadConfig() (*Config, error) {
 	cfg := &Config{}
 	err = yaml.Unmarshal(data, cfg)
 	if err != nil {
+		slog.Error("Failed to unmarshal configuration file", "error", err)
 		return nil, unmarshalConfigFileError
 	}
 
