@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"log"
 	"log/slog"
 	"os"
@@ -11,6 +10,7 @@ import (
 	"konsume/pkg/common"
 	"konsume/pkg/config"
 	"konsume/pkg/queue"
+	"konsume/pkg/queue/kafka"
 	"konsume/pkg/queue/rabbitmq"
 	"konsume/pkg/runner"
 )
@@ -30,7 +30,8 @@ func main() {
 			consumer := rabbitmq.NewConsumer(provider.AMQPConfig)
 			consumers[provider.Name] = consumer
 		case common.QueueSourceKafka:
-			// Kafka setup (when implemented)
+			consumer := kafka.NewConsumer(provider.KafkaConfig)
+			consumers[provider.Name] = consumer
 		default:
 			log.Fatalf("Unknown queue source: %s", provider.Type)
 		}
@@ -64,13 +65,4 @@ func setupSignalHandling() chan bool {
 // waitForShutdown blocks until a shutdown signal is received.
 func waitForShutdown(done chan bool) {
 	<-done
-}
-
-func getRabbitMQConfig(providers []*config.ProviderConfig) (*config.AMQPConfig, error) {
-	for _, provider := range providers {
-		if provider.Type == "amqp" {
-			return provider.AMQPConfig, nil
-		}
-	}
-	return nil, errors.New("rabbitmq config not found")
 }

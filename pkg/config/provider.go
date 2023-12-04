@@ -19,7 +19,7 @@ var (
 
 	kafkaConfigNotDefinedError = errors.New("kafka config not defined")
 	brokersNotDefinedError     = errors.New("brokers not defined")
-	topicNotDefinedError       = errors.New("topics not defined")
+	topicNotDefinedError       = errors.New("topic not defined")
 	groupNotDefinedError       = errors.New("group not defined")
 )
 
