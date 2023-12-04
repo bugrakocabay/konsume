@@ -266,8 +266,7 @@ providers:
   - name: "kafka-queue"
     type: "kafka"
     kafka-config:
-      topics:
-        - "topic1"
+      topic: "topic1"
       group: "group1"
 queues:
   - name: "test"
@@ -280,7 +279,7 @@ queues:
 			expectedError: brokersNotDefinedError,
 		},
 		{
-			name:       "should throw error if kafka topics are not defined",
+			name:       "should throw error if kafka topic are not defined",
 			configPath: "./config.yaml",
 			pathAndContent: map[string]string{
 				"config.yaml": `
@@ -299,7 +298,7 @@ queues:
         url: "http://localhost:8080"
 `,
 			},
-			expectedError: topicsNotDefinedError,
+			expectedError: topicNotDefinedError,
 		},
 		{
 			name:       "should throw error if kafka group is not defined",
@@ -312,8 +311,7 @@ providers:
     kafka-config:
       brokers:
         - "kafka:9092"
-      topics:
-        - "topic1"
+      topic: "group1"
 queues:
   - name: "test"
     provider: "test-queue"
