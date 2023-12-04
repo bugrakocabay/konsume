@@ -41,7 +41,6 @@ func listen(ctx context.Context, consumer queue.MessageQueueConsumer, qCfg *conf
 		return err
 	}
 
-	// Here, you can modify the Consume method of your consumer to accept the context
 	return consumer.Consume(ctx, qCfg.Name, func(msg []byte) error {
 		log.Printf("Received message from %s: %s", qCfg.Name, string(msg))
 		return nil

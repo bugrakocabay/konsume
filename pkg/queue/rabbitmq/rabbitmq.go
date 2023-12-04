@@ -6,12 +6,9 @@ import (
 	"log/slog"
 
 	"konsume/pkg/config"
-	"konsume/pkg/queue"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
-
-var _ queue.MessageQueueConsumer = (*Consumer)(nil)
 
 // Consumer is the implementation of the MessageQueueConsumer interface for RabbitMQ
 type Consumer struct {
