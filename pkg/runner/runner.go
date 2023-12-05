@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"fmt"
+	"konsume/pkg/util"
 	"log"
 	"log/slog"
 	"math/rand"
@@ -30,7 +31,7 @@ func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueC
 		wg.Add(1)
 		go func(c queue.MessageQueueConsumer, qc *config.QueueConfig) {
 			defer wg.Done()
-			if err := listen(ctx, c, qc); err != nil {
+			if err := listenAndProcess(ctx, c, qc); err != nil {
 				log.Printf("Failed to start consumer for queue %s: %s", qc.Name, err)
 			}
 		}(consumer, qCfg)
@@ -40,17 +41,36 @@ func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueC
 	return nil
 }
 
-// listen consumes messages from the queue and processes them
-func listen(ctx context.Context, consumer queue.MessageQueueConsumer, qCfg *config.QueueConfig) error {
+// listenAndProcess consumes messages from the queue and processes them
+func listenAndProcess(ctx context.Context, consumer queue.MessageQueueConsumer, qCfg *config.QueueConfig) error {
 	if err := consumer.Connect(); err != nil {
 		return err
 	}
 
 	return consumer.Consume(ctx, qCfg.Name, func(msg []byte) error {
 		log.Printf("Received message from %s: %s", qCfg.Name, string(msg))
+		var (
+			messageData map[string]interface{}
+			err         error
+			body        []byte
+		)
 		for _, rCfg := range qCfg.Routes {
-			rqstr := requester.NewRequester(rCfg.URL, rCfg.Method, msg, rCfg.Headers)
-			sendRequestWithStrategy(qCfg, rCfg, msg, rqstr)
+			if len(rCfg.Body) > 0 {
+				messageData, err = util.ParseJSONToMap(msg)
+				if err != nil {
+					slog.Error("Failed to parse message", "error", err)
+					return err
+				}
+				body, err = util.ProcessTemplate(rCfg.Body, messageData)
+				if err != nil {
+					slog.Error("Failed to process template", "error", err)
+					body = msg
+				}
+			} else {
+				body = msg
+			}
+			rqstr := requester.NewRequester(rCfg.URL, rCfg.Method, body, rCfg.Headers)
+			sendRequestWithStrategy(qCfg, rCfg, body, rqstr)
 		}
 		return nil
 	})
