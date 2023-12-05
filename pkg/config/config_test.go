@@ -470,6 +470,7 @@ queues:
   - name: "test"
     provider: "test-queue"
     retry:
+      enabled: true
       interval: 1s
     routes:
       - name: "test-route"
@@ -495,6 +496,7 @@ queues:
   - name: "test"
     provider: "test-queue"
     retry:
+      enabled: true
       max_retries: 2
     routes:
       - name: "test-route"
@@ -502,6 +504,34 @@ queues:
 `,
 			},
 			expectedError: intervalNotDefinedError,
+		},
+		{
+			name:       "should throw error if invalid strategy is defined for queue retry config",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    retry:
+      enabled: true
+      max_retries: 2
+      interval: 1s
+      strategy: "invalid-strategy"
+    routes:
+      - name: "test-route"
+        url: "http://localhost:8080"
+`,
+			},
+			expectedError: invalidStrategyError,
 		},
 		{
 			name:       "should load config file successfully",
