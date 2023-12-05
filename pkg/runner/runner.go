@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
+	"math/rand"
 	"sync"
+	"time"
 
+	"konsume/pkg/common"
 	"konsume/pkg/config"
 	"konsume/pkg/queue"
 	"konsume/pkg/requester"
@@ -57,4 +60,26 @@ func listen(ctx context.Context, consumer queue.MessageQueueConsumer, qCfg *conf
 func sendRequestWithStrategy(qCfg *config.QueueConfig, rCfg *config.RouteConfig, msg []byte, requester requester.HTTPRequester) {
 	resp := requester.SendRequest()
 	slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode)
+	retry := qCfg.Retry
+	if retry != nil && resp.StatusCode >= retry.ThresholdStatus {
+		for i := 1; i <= retry.MaxRetries; i++ {
+			slog.Info("Retrying", "route", rCfg.Name, "strategy", retry.Strategy, "retry", i)
+			switch retry.Strategy {
+			case common.RetryStrategyFixed:
+				time.Sleep(retry.Interval)
+			case common.RetryStrategyExpo:
+				time.Sleep(retry.Interval * time.Duration(i))
+			case common.RetryStrategyRand:
+				time.Sleep(time.Duration(rand.Intn(int(retry.Interval))))
+			default:
+				slog.Error("Invalid retry strategy", "strategy", retry.Strategy)
+				break
+			}
+			resp = requester.SendRequest()
+			slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode)
+			if resp.StatusCode < retry.ThresholdStatus {
+				break
+			}
+		}
+	}
 }

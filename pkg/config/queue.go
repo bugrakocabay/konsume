@@ -3,6 +3,8 @@ package config
 import (
 	"errors"
 	"time"
+
+	"konsume/pkg/common"
 )
 
 var (
@@ -12,6 +14,7 @@ var (
 
 	maxRetriesNotDefinedError = errors.New("max retries not defined")
 	intervalNotDefinedError   = errors.New("interval not defined")
+	invalidStrategyError      = errors.New("invalid strategy")
 
 	noRoutesDefinedError     = errors.New("no routes defined")
 	routeNameNotDefinedError = errors.New("route name not defined")
@@ -43,6 +46,9 @@ type RetryConfig struct {
 
 	// Interval is the interval between retries
 	Interval time.Duration `yaml:"interval"`
+
+	// ThresholdStatus is the minimum status code that will trigger a retry, defaults to 500
+	ThresholdStatus int `yaml:"threshold_status,omitempty"`
 }
 
 // RouteConfig is the main configuration information needed to send a message to a service
@@ -99,6 +105,14 @@ func (queue *QueueConfig) validateQueue(providers []*ProviderConfig) error {
 		}
 		if queue.Retry.Strategy == "" {
 			queue.Retry.Strategy = "fixed"
+		}
+		if queue.Retry.Strategy != common.RetryStrategyFixed &&
+			queue.Retry.Strategy != common.RetryStrategyExpo &&
+			queue.Retry.Strategy != common.RetryStrategyRand {
+			return invalidStrategyError
+		}
+		if queue.Retry.ThresholdStatus == 0 {
+			queue.Retry.ThresholdStatus = 500
 		}
 	}
 
