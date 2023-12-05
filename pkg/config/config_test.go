@@ -470,6 +470,7 @@ queues:
   - name: "test"
     provider: "test-queue"
     retry:
+      enabled: true
       interval: 1s
     routes:
       - name: "test-route"
@@ -495,6 +496,7 @@ queues:
   - name: "test"
     provider: "test-queue"
     retry:
+      enabled: true
       max_retries: 2
     routes:
       - name: "test-route"
@@ -520,6 +522,7 @@ queues:
   - name: "test"
     provider: "test-queue"
     retry:
+      enabled: true
       max_retries: 2
       interval: 1s
       strategy: "invalid-strategy"

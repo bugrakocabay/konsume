@@ -38,6 +38,9 @@ type QueueConfig struct {
 
 // RetryConfig is the main configuration information needed to retry a message
 type RetryConfig struct {
+	// Enabled is the flag that indicates if the retry is enabled, defaults to false
+	Enabled bool `yaml:"enabled,omitempty"`
+
 	// MaxRetries is the maximum number of retries for the queue
 	MaxRetries int `yaml:"max_retries"`
 
@@ -96,7 +99,7 @@ func (queue *QueueConfig) validateQueue(providers []*ProviderConfig) error {
 		return queueProviderDoesNotExistError
 	}
 
-	if queue.Retry != nil {
+	if queue.Retry != nil && queue.Retry.Enabled {
 		if queue.Retry.MaxRetries == 0 {
 			return maxRetriesNotDefinedError
 		}
