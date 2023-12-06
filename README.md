@@ -1,12 +1,30 @@
-![konsume](.github/assets/logo.png)
+<p align="center">
+  <a href="https://github.com/bugrakocabay/konsume">
+    <img src=".github/assets/logo.png" alt="konsume logo" />
+  </a>
+</p>
 
-[![Go](https://github.com/bugrakocabay/konsume/actions/workflows/ci.yaml/badge.svg)](https://github.com/bugrakocabay/konsume/actions/workflows/ci.yaml)
-[![Go version](https://img.shields.io/github/go-mod/go-version/bugrakocabay/konsume.svg)](https://github.com/bugrakocabay/konsume)
-[![Follow](https://img.shields.io/github/followers/bugrakocabay?label=Follow&style=social)](https://github.com/bugrakocabay)
+<p align="center">
+  konsume is a powerful and flexible tool designed to consume messages from various message queues like RabbitMQ and Kafka and perform HTTP requests based on configurations.
+</p>
 
-# konsume
+<p align="center">
+  <a href="https://github.com/bugrakocabay/konsume/actions/workflows/ci.yaml">
+    <img src="https://github.com/bugrakocabay/konsume/actions/workflows/ci.yaml/badge.svg?branch=dev" alt="CI" />
+  </a>
+  <a href="https://github.com/bugrakocabay/konsume">
+    <img src="https://img.shields.io/github/go-mod/go-version/bugrakocabay/konsume.svg" alt="Go Version" />
+  </a>
+  <a href="https://github.com/bugrakocabay">
+    <img src="https://img.shields.io/github/followers/bugrakocabay?label=Follow&style=social" alt="Follow" />
+  </a>
+</p>
 
-konsume is a powerful and flexible tool designed to consume messages from RabbitMQ queues and perform HTTP requests based on configurable integrations. It offers a variety of features including retry strategies, dynamic request body templating, and custom HTTP headers, making it suitable for a wide range of integration scenarios.
+
+## Overview
+TLDR; If you want to consume messages from RabbitMQ or Kafka and perform HTTP requests based on configurations, konsume is for you.
+
+konsume simplifies the integration of message queues with services, offering a solution for handling real-time data. It's designed to bridge the gap between complex messaging systems like RabbitMQ, Kafka and various web APIs. With konsume, you can easily set up a workflow where messages from these queues trigger specific HTTP requests, allowing for automated, dynamic responses to data as it flows through your system. Its configuration-driven approach, combined with support for various retry strategies and custom request formatting, makes it adaptable for a wide range of scenarios, from simple data forwarding to complex data processing pipelines. This tool is especially valuable in environments where real-time data processing and integration are key, providing a reliable and flexible solution to leverage the power of message queues in a web-driven world.
 
 ## Table of Contents
 - [Features](#features)
@@ -14,62 +32,52 @@ konsume is a powerful and flexible tool designed to consume messages from Rabbit
 - [Configuration](#configuration)
 
 ### Features
-- **Message Consumption**: Efficiently consumes messages from specified RabbitMQ queues.
+- **Message Consumption**: Efficiently consumes messages from specified queues.
 - **Dynamic HTTP Requests**: Sends HTTP requests based on message content and predefined configurations.
 - **Retry Strategies**: Supports fixed, exponential, and random retry strategies for handling request failures.
 - **Request Body Templating**: Dynamically constructs request bodies using templates with values extracted from incoming messages.
 - **Custom HTTP Headers**: Allows setting custom HTTP headers for outgoing requests.
-- **Configurable via YAML**: Easy configuration using a YAML file for defining queues, integrations, and behaviors.
+- **Configurable via YAML**: Easy configuration using a YAML file for defining queues, routes, and behaviors.
 
 ### Usage
-You need to create a `config.yaml`file to use konsume. It retrieves all the necessary information from this configuration file.
+konsume depends on a YAML configuration file for defining queues, routes, and behaviors.
 
-
-A simple usage for konsume:
+**A simple usage for konsume with RabbitMQ:**
 ```yaml
-rabbitmq:
-  host: "localhost"
-  port: 5672
-  username: "user"
-  password: "password"
-
+providers:
+  - name: "rabbit-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "localhost"
+      port: 5672
+      username: "user"
+      password: "password"
 queues:
-  - name: "queue1"
-    retry:
-      enabled: true
-      max_retries: 2
-      interval: 30s
-      strategy: "fixed"
-    integrations:
-      - name: "my-queue"
+  - name: "queue-for-rabbit"
+    provider: "rabbit-queue"
+    routes:
+      - name: "ServiceA_Queue2"
         type: "REST"
         method: "POST"
-        url: "http://sampleurl.com"
+        url: "https://someurl.com"
 ```
 
-### Configuration
-| Parameter                                       | Description                                                                                                                                     | Is Required?               |
-|:------------------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------|:---------------------------|
-| `rabbitmq`                                      | RabbitMQ connection configuration                                                                                                               | yes                        |
-| `rabbitmq.host`                                 | RabbitMQ host to connect                                                                                                                        | yes                        |
-| `rabbitmq.port`                                 | RabbitMQ port to connect                                                                                                                        | yes                        |
-| `rabbitmq.username`                             | RabbitMQ username                                                                                                                               | yes                        |
-| `rabbitmq.password`                             | RabbitMQ password                                                                                                                               | yes                        |
-| `queues`                                        | Configuration for queue that will be consumed                                                                                                   | yes                        |
-| `queues.name`                                   | Name of the queue                                                                                                                               | yes                        |
-| `queues.retry`                                  | Retry mechanism configuration                                                                                                                   | no                         |
-| `queues.retry.enabled`                          | Flag for enabling or disabling retry                                                                                                            | yes (if retry is enabled)  |
-| `queues.retry.max_retries`                      | Amount of times that request will be sent, if service returns failure                                                                           | yes (if retry is enabled)  |
-| `queues.retry.interval`                         | Duration between retries                                                                                                                        | yes (if retry is enabled)  |
-| `queues.retry.strategy`                         | Strategy to use for retry mechanism, three options are available, "fixed", "expo", "random"                                                     | no (defaults to "fixed")   |
-| `queues.retry.requeue`                          | Requeueing the message after failure                                                                                                            | no                         |
-| `queues.integrations`                           | Services that the message will be forwarded                                                                                                     | yes                        |
-| `queues.integrations.name`                      | Name of the integration                                                                                                                         | yes                        |
-| `queues.integrations.type`                      | Type of the integration, currently only "REST" is available                                                                                     | yes                        |
-| `queues.integrations.method`                    | HTTP method to use for REST integrations, two options are available, "GET", "POST"                                                              | yes (if type is "REST")    |
-| `queues.integrations.url`                       | URL to send the request                                                                                                                         | yes                        |
-| `queues.integrations.headers`                   | Custom HTTP headers to send with the request                                                                                                    | no                         |
-| `queues.integrations.headers.key`               | Key of the header                                                                                                                               | yes (if headers is defined) |
-| `queues.integrations.headers.value`             | Value of the header                                                                                                                             | yes (if headers is defined) |
-| `queues.integrations.body`                      | Body of the request                                                                                                                             | no                         |
-
+**A simple usage for konsume with Kafka:**
+```yaml
+providers:
+  - name: "kafka-queue"
+    type: "kafka"
+    kafka-config:
+      brokers:
+        - "localhost:9092"
+      topic: "your_topic_name"
+      group: "group1"
+queues:      
+  - name: "queue-for-kafka"
+    provider: "kafka-queue"
+    routes:
+      - name: "ServiceA_Queue2"
+        type: "REST"
+        method: "POST"
+        url: "https://someurl.com"
+```

@@ -97,9 +97,9 @@ func TestListen(t *testing.T) {
 		ConsumeFunc: func(queueName string, handler func(msg []byte) error) error { return nil },
 	}
 	ctx := context.Background()
-	err := listen(ctx, mockConsumer, qCfg)
+	err := listenAndProcess(ctx, mockConsumer, qCfg)
 	if err != nil {
-		t.Errorf("listen() error = %v, wantErr %v", err, nil)
+		t.Errorf("listenAndProcess() error = %v, wantErr %v", err, nil)
 	}
 	if !mockConsumer.ConnectCalled {
 		t.Errorf("Expected Connect to be called, but it was not")
