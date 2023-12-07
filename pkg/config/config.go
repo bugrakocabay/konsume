@@ -29,7 +29,7 @@ type Config struct {
 func LoadConfig() (*Config, error) {
 	configPath := os.Getenv("KONSUME_CONFIG_PATH")
 	if len(configPath) == 0 {
-		configPath = "config.yaml"
+		configPath = "/config/config.yaml"
 	}
 	slog.Info("Loading configuration from", "path", configPath)
 
