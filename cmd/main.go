@@ -1,4 +1,4 @@
-package main
+package konsume
 
 import (
 	"log"
@@ -15,7 +15,7 @@ import (
 	"github.com/bugrakocabay/konsume/pkg/runner"
 )
 
-func main() {
+func Execute() {
 	slog.Info("Starting konsume")
 
 	cfg, err := config.LoadConfig()
