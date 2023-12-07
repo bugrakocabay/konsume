@@ -3,7 +3,7 @@ package config
 import (
 	"errors"
 
-	"konsume/pkg/common"
+	"github.com/bugrakocabay/konsume/pkg/common"
 )
 
 var (

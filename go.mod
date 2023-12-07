@@ -1,4 +1,4 @@
-module konsume
+module github.com/bugrakocabay/konsume
 
 go 1.21
 

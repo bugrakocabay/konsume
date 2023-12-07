@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"konsume/pkg/config"
+	"github.com/bugrakocabay/konsume/pkg/config"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )

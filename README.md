@@ -24,12 +24,7 @@
 ## Overview
 TLDR; If you want to consume messages from RabbitMQ or Kafka and perform HTTP requests based on configurations, konsume is for you.
 
-konsume simplifies the integration of message queues with services, offering a solution for handling real-time data. It's designed to bridge the gap between complex messaging systems like RabbitMQ, Kafka and various web APIs. With konsume, you can easily set up a workflow where messages from these queues trigger specific HTTP requests, allowing for automated, dynamic responses to data as it flows through your system. Its configuration-driven approach, combined with support for various retry strategies and custom request formatting, makes it adaptable for a wide range of scenarios, from simple data forwarding to complex data processing pipelines. This tool is especially valuable in environments where real-time data processing and integration are key, providing a reliable and flexible solution to leverage the power of message queues in a web-driven world.
-
-## Table of Contents
-- [Features](#features)
-- [Usage](#usage)
-- [Configuration](#configuration)
+komsume is a tool that easily connects message queues like RabbitMQ and Kafka with web services, automating data-driven HTTP requests. It bridges complex messaging systems and web APIs, enabling you to create workflows where queue messages automatically trigger web requests. Its flexible setup, including various retry options and customizable request formats, suits a range of uses, from basic data transfers to intricate processing tasks. 
 
 ### Features
 - **Message Consumption**: Efficiently consumes messages from specified queues.
@@ -40,7 +35,7 @@ konsume simplifies the integration of message queues with services, offering a s
 - **Configurable via YAML**: Easy configuration using a YAML file for defining queues, routes, and behaviors.
 
 ### Usage
-konsume depends on a YAML configuration file for defining queues, routes, and behaviors.
+konsume depends on a YAML configuration file for defining queues, routes, and behaviors. There are two main sections in the configuration file: `providers` and `queues`. In the `providers` section, you can define the message queue providers that konsume will use to consume messages. In the `queues` section, you can define the queues that konsume will consume messages from and the routes that konsume will use to send HTTP requests.
 
 **A simple usage for konsume with RabbitMQ:**
 ```yaml
