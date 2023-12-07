@@ -7,12 +7,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	"konsume/pkg/common"
-	"konsume/pkg/config"
-	"konsume/pkg/queue"
-	"konsume/pkg/queue/kafka"
-	"konsume/pkg/queue/rabbitmq"
-	"konsume/pkg/runner"
+	"github.com/bugrakocabay/konsume/pkg/common"
+	"github.com/bugrakocabay/konsume/pkg/config"
+	"github.com/bugrakocabay/konsume/pkg/queue"
+	"github.com/bugrakocabay/konsume/pkg/queue/kafka"
+	"github.com/bugrakocabay/konsume/pkg/queue/rabbitmq"
+	"github.com/bugrakocabay/konsume/pkg/runner"
 )
 
 func main() {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	"konsume/pkg/config"
+	"github.com/bugrakocabay/konsume/pkg/config"
 
 	"github.com/segmentio/kafka-go"
 )

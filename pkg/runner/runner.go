@@ -3,17 +3,17 @@ package runner
 import (
 	"context"
 	"fmt"
-	"konsume/pkg/util"
 	"log"
 	"log/slog"
 	"math/rand"
 	"sync"
 	"time"
 
-	"konsume/pkg/common"
-	"konsume/pkg/config"
-	"konsume/pkg/queue"
-	"konsume/pkg/requester"
+	"github.com/bugrakocabay/konsume/pkg/common"
+	"github.com/bugrakocabay/konsume/pkg/config"
+	"github.com/bugrakocabay/konsume/pkg/queue"
+	"github.com/bugrakocabay/konsume/pkg/requester"
+	"github.com/bugrakocabay/konsume/pkg/util"
 )
 
 // StartConsumers starts the consumers for all queues

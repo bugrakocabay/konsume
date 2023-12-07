@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"konsume/pkg/common"
-	"konsume/pkg/config"
-	"konsume/pkg/queue"
+	"github.com/bugrakocabay/konsume/pkg/common"
+	"github.com/bugrakocabay/konsume/pkg/config"
+	"github.com/bugrakocabay/konsume/pkg/queue"
 )
 
 type MockHTTPRequester struct {

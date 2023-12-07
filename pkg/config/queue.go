@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"konsume/pkg/common"
+	"github.com/bugrakocabay/konsume/pkg/common"
 )
 
 var (
