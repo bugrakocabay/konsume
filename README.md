@@ -15,8 +15,8 @@
   <a href="https://github.com/bugrakocabay/konsume">
     <img src="https://img.shields.io/github/go-mod/go-version/bugrakocabay/konsume.svg" alt="Go Version" />
   </a>
-  <a href="https://github.com/bugrakocabay">
-    <img src="https://img.shields.io/github/followers/bugrakocabay?label=Follow&style=social" alt="Follow" />
+  <a href="https://goreportcard.com/report/github.com/bugrakocabay/konsume">
+    <img src="https://goreportcard.com/badge/github.com/bugrakocabay/konsume" alt="Go Report" />
   </a>
 </p>
 
