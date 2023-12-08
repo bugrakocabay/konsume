@@ -22,7 +22,7 @@ clean:
 	rm -f $(BINARY_NAME)
 
 run:
-	$(GORUN) ./cmd/main.go
+	$(GORUN) .
 
 deps:
 	$(GOGET) ./...
