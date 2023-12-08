@@ -59,7 +59,6 @@ func listenAndProcess(ctx context.Context, consumer queue.MessageQueueConsumer, 
 				messageData, err = util.ParseJSONToMap(msg)
 				if err != nil {
 					slog.Error("Failed to parse message", "error", err)
-					return err
 				}
 				body, err = util.ProcessTemplate(rCfg.Body, messageData)
 				if err != nil {
