@@ -31,6 +31,9 @@ type ProviderConfig struct {
 	// Type is the type of the provider, such as "amqp" or "kafka"
 	Type string `yaml:"type"`
 
+	// Retry is the number of times to retry connecting to the provider
+	Retry int `yaml:"retry,omitempty"`
+
 	// AMQPConfig is the configuration for the AMQP provider
 	AMQPConfig *AMQPConfig `yaml:"amqp-config,omitempty"`
 
