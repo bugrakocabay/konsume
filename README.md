@@ -18,6 +18,9 @@
   <a href="https://goreportcard.com/report/github.com/bugrakocabay/konsume">
     <img src="https://goreportcard.com/badge/github.com/bugrakocabay/konsume" alt="Go Report" />
   </a>
+  <a href="https://codecov.io/github/bugrakocabay/konsume" > 
+    <img src="https://codecov.io/github/bugrakocabay/konsume/graph/badge.svg?token=r36BDXBfXR" alt="Coverage" /> 
+  </a>
 </p>
 
 
