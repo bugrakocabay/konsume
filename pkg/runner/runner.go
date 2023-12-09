@@ -17,7 +17,7 @@ import (
 )
 
 // StartConsumers starts the consumers for all queues
-func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueConsumer) error {
+func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueConsumer, providers map[string]*config.ProviderConfig) error {
 	var wg sync.WaitGroup
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -28,25 +28,50 @@ func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueC
 			return fmt.Errorf("no consumer found for provider: %s", qCfg.Provider)
 		}
 
+		providerCfg, ok := providers[qCfg.Provider]
+		if !ok {
+			return fmt.Errorf("no provider config found for provider: %s", qCfg.Provider)
+		}
+
 		wg.Add(1)
-		go func(c queue.MessageQueueConsumer, qc *config.QueueConfig) {
+		go func(c queue.MessageQueueConsumer, qc *config.QueueConfig, pc *config.ProviderConfig) {
 			defer wg.Done()
+			if err := connectWithRetry(ctx, c, pc); err != nil {
+				return
+			}
 			if err := listenAndProcess(ctx, c, qc); err != nil {
 				log.Printf("Failed to start consumer for queue %s: %s", qc.Name, err)
 			}
-		}(consumer, qCfg)
+		}(consumer, qCfg, providerCfg)
 	}
 
 	wg.Wait()
 	return nil
 }
 
-// listenAndProcess consumes messages from the queue and processes them
-func listenAndProcess(ctx context.Context, consumer queue.MessageQueueConsumer, qCfg *config.QueueConfig) error {
-	if err := consumer.Connect(); err != nil {
+// connectWithRetry tries to connect to the queue with the given consumer
+func connectWithRetry(ctx context.Context, consumer queue.MessageQueueConsumer, cfg *config.ProviderConfig) error {
+	var err error
+	err = consumer.Connect(ctx)
+	if err != nil {
+		slog.Error("Failed to connect to queue", "error", err)
+		if cfg.Retry > 0 {
+			for i := 1; i <= cfg.Retry; i++ {
+				time.Sleep(time.Duration(5) * time.Second)
+				slog.Info("Retrying to connect", "retry", i)
+				err = consumer.Connect(ctx)
+				if err == nil {
+					break
+				}
+			}
+		}
 		return err
 	}
+	return err
+}
 
+// listenAndProcess consumes messages from the queue and processes them
+func listenAndProcess(ctx context.Context, consumer queue.MessageQueueConsumer, qCfg *config.QueueConfig) error {
 	return consumer.Consume(ctx, qCfg.Name, func(msg []byte) error {
 		log.Printf("Received message from %s: %s", qCfg.Name, string(msg))
 		var (

@@ -40,7 +40,7 @@ type MockMessageQueueConsumer struct {
 	CloseCalled   bool
 }
 
-func (m *MockMessageQueueConsumer) Connect() error {
+func (m *MockMessageQueueConsumer) Connect(ctx context.Context) error {
 	m.ConnectCalled = true
 	if m.ConnectFunc != nil {
 		return m.ConnectFunc()
@@ -76,8 +76,10 @@ func TestStartConsumers(t *testing.T) {
 	}
 
 	consumers := map[string]queue.MessageQueueConsumer{"rabbitmq": mockConsumer}
+	providerMap := make(map[string]*config.ProviderConfig)
+	providerMap["rabbitmq"] = &config.ProviderConfig{Name: "rabbitmq", Type: "amqp"}
 
-	err := StartConsumers(cfg, consumers)
+	err := StartConsumers(cfg, consumers, providerMap)
 	if err != nil {
 		t.Errorf("StartConsumers() error = %v, wantErr %v", err, nil)
 	}
@@ -100,9 +102,6 @@ func TestListenAndProcess(t *testing.T) {
 	err := listenAndProcess(ctx, mockConsumer, qCfg)
 	if err != nil {
 		t.Errorf("listenAndProcess() error = %v, wantErr %v", err, nil)
-	}
-	if !mockConsumer.ConnectCalled {
-		t.Errorf("Expected Connect to be called, but it was not")
 	}
 	if !mockConsumer.ConsumeCalled {
 		t.Errorf("Expected Consume to be called, but it was not")
@@ -153,8 +152,10 @@ func TestStartConsumersMultipleQueues(t *testing.T) {
 	}
 
 	consumers := map[string]queue.MessageQueueConsumer{"rabbitmq": mockConsumer}
+	providerMap := make(map[string]*config.ProviderConfig)
+	providerMap["rabbitmq"] = &config.ProviderConfig{Name: "rabbitmq", Type: "amqp"}
 
-	err := StartConsumers(cfg, consumers)
+	err := StartConsumers(cfg, consumers, providerMap)
 	if err == nil || !strings.Contains(err.Error(), "no consumer found for provider: unknown") {
 		t.Errorf("Expected error for missing provider, got %v", err)
 	}
@@ -195,7 +196,7 @@ func TestListenAndProcess_InvalidMessageFormat(t *testing.T) {
 func TestStartConsumersNoQueues(t *testing.T) {
 	cfg := &config.Config{}
 
-	err := StartConsumers(cfg, nil)
+	err := StartConsumers(cfg, nil, nil)
 	if err != nil {
 		t.Errorf("Expected no error for no queues, got %v", err)
 	}

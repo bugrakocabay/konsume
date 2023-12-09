@@ -24,20 +24,23 @@ func Execute() {
 	}
 
 	consumers := make(map[string]queue.MessageQueueConsumer)
+	providerMap := make(map[string]*config.ProviderConfig)
 	for _, provider := range cfg.Providers {
 		switch provider.Type {
 		case common.QueueSourceRabbitMQ:
 			consumer := rabbitmq.NewConsumer(provider.AMQPConfig)
 			consumers[provider.Name] = consumer
+			providerMap[provider.Name] = provider
 		case common.QueueSourceKafka:
 			consumer := kafka.NewConsumer(provider.KafkaConfig)
 			consumers[provider.Name] = consumer
+			providerMap[provider.Name] = provider
 		default:
 			log.Fatalf("Unknown queue source: %s", provider.Type)
 		}
 	}
 
-	if err = runner.StartConsumers(cfg, consumers); err != nil {
+	if err = runner.StartConsumers(cfg, consumers, providerMap); err != nil {
 		log.Fatalf("Failed to start consumers: %s", err)
 	}
 
