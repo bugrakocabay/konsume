@@ -40,7 +40,7 @@ type MockMessageQueueConsumer struct {
 	CloseCalled   bool
 }
 
-func (m *MockMessageQueueConsumer) Connect() error {
+func (m *MockMessageQueueConsumer) Connect(ctx context.Context) error {
 	m.ConnectCalled = true
 	if m.ConnectFunc != nil {
 		return m.ConnectFunc()

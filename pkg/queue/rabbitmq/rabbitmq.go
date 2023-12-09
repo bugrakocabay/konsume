@@ -25,7 +25,7 @@ func NewConsumer(cfg *config.AMQPConfig) *Consumer {
 }
 
 // Connect creates a connection to RabbitMQ and a channel
-func (c *Consumer) Connect() error {
+func (c *Consumer) Connect(ctx context.Context) error {
 	var err error
 	cfg := c.config
 	connectionString := fmt.Sprintf("amqp://%s:%s@%s:%d/", cfg.Username, cfg.Password, cfg.Host, cfg.Port)
