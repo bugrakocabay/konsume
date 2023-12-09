@@ -89,7 +89,7 @@ func TestStartConsumers(t *testing.T) {
 	}
 }
 
-func TestListen(t *testing.T) {
+func TestListenAndProcess(t *testing.T) {
 	qCfg := &config.QueueConfig{Name: "testQueue"}
 
 	mockConsumer := &MockMessageQueueConsumer{
@@ -106,6 +106,35 @@ func TestListen(t *testing.T) {
 	}
 	if !mockConsumer.ConsumeCalled {
 		t.Errorf("Expected Consume to be called, but it was not")
+	}
+}
+
+func TestListenAndProcess_ConnectFails(t *testing.T) {
+	qCfg := &config.QueueConfig{Name: "testQueue"}
+
+	mockConsumer := &MockMessageQueueConsumer{
+		ConnectFunc: func() error { return errors.New("connection failed") },
+	}
+	ctx := context.Background()
+	err := listenAndProcess(ctx, mockConsumer, qCfg)
+	if err == nil {
+		t.Error("Expected an error when connection fails, but got nil")
+	}
+}
+
+func TestListenAndProcess_ConsumptionFails(t *testing.T) {
+	qCfg := &config.QueueConfig{Name: "testQueue"}
+
+	mockConsumer := &MockMessageQueueConsumer{
+		ConnectFunc: func() error { return nil },
+		ConsumeFunc: func(queueName string, handler func(msg []byte) error) error {
+			return errors.New("consumption failed")
+		},
+	}
+	ctx := context.Background()
+	err := listenAndProcess(ctx, mockConsumer, qCfg)
+	if err == nil {
+		t.Error("Expected an error when consumption fails, but got nil")
 	}
 }
 
@@ -128,6 +157,38 @@ func TestStartConsumersMultipleQueues(t *testing.T) {
 	err := StartConsumers(cfg, consumers)
 	if err == nil || !strings.Contains(err.Error(), "no consumer found for provider: unknown") {
 		t.Errorf("Expected error for missing provider, got %v", err)
+	}
+}
+
+func TestListenAndProcess_SuccessfulConsumption(t *testing.T) {
+	qCfg := &config.QueueConfig{Name: "testQueue"}
+
+	mockConsumer := &MockMessageQueueConsumer{
+		ConnectFunc: func() error { return nil },
+		ConsumeFunc: func(queueName string, handler func(msg []byte) error) error {
+			return handler([]byte("test message"))
+		},
+	}
+	ctx := context.Background()
+	err := listenAndProcess(ctx, mockConsumer, qCfg)
+	if err != nil {
+		t.Errorf("Expected no error, but got: %v", err)
+	}
+}
+
+func TestListenAndProcess_InvalidMessageFormat(t *testing.T) {
+	qCfg := &config.QueueConfig{Name: "testQueue"}
+
+	mockConsumer := &MockMessageQueueConsumer{
+		ConnectFunc: func() error { return nil },
+		ConsumeFunc: func(queueName string, handler func(msg []byte) error) error {
+			return handler([]byte("invalid message"))
+		},
+	}
+	ctx := context.Background()
+	err := listenAndProcess(ctx, mockConsumer, qCfg)
+	if err != nil {
+		t.Errorf("Expected no error, but got: %v", err)
 	}
 }
 
@@ -238,6 +299,22 @@ func TestSendRequestWithStrategy(t *testing.T) {
 			expectedCalls: 3,
 			maxRetries:    2,
 			interval:      1 * time.Millisecond,
+		},
+		{
+			name: "should return error when retry is enabled and retry strategy is invalid",
+			route: &config.RouteConfig{
+				Name:   "TestRoute",
+				URL:    "http://localhost:8080",
+				Method: "GET",
+				Type:   "REST",
+			},
+			mockResponse: &http.Response{
+				StatusCode: 500,
+				Body:       io.NopCloser(bytes.NewBufferString("Internal Server Error")),
+			},
+			retryEnabled:  true,
+			retryStrategy: "invalid",
+			expectedCalls: 1,
 		},
 	}
 
