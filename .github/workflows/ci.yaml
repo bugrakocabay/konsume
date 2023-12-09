@@ -19,10 +19,10 @@ jobs:
       - name: Build
         run: go build -v ./...
 
-      - name: Test
-        run: go test -v ./...
+      - name: Test with coverage
+        run: env "PATH=$PATH" "GOROOT=$GOROOT" go test ./... -race -coverprofile=coverage.txt -covermode=atomic
 
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Codecov
+        uses: codecov/codecov-action@v3.1.4
+        with:
+          files: ./coverage.txt
