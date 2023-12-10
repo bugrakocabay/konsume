@@ -91,6 +91,59 @@ func TestStartConsumers(t *testing.T) {
 	}
 }
 
+func TestConnectWithRetry(t *testing.T) {
+	tests := []struct {
+		name              string
+		connectFunc       func() error
+		retryCount        int
+		expectedRetry     int
+		expectConnectCall bool
+		expectError       bool
+	}{
+		{
+			name: "Successful connection without retries",
+			connectFunc: func() error {
+				return nil
+			},
+			retryCount:        1,
+			expectedRetry:     0,
+			expectConnectCall: true,
+			expectError:       false,
+		},
+		{
+			name: "Fail to connect and exhaust retries",
+			connectFunc: func() error {
+				return errors.New("connection failed")
+			},
+			retryCount:        1,
+			expectedRetry:     1,
+			expectConnectCall: true,
+			expectError:       true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockConsumer := &MockMessageQueueConsumer{
+				ConnectFunc: tt.connectFunc,
+			}
+			ctx := context.Background()
+			cfg := &config.ProviderConfig{
+				Retry: tt.retryCount,
+			}
+
+			err := connectWithRetry(ctx, mockConsumer, cfg)
+
+			if (err != nil) != tt.expectError {
+				t.Errorf("connectWithRetry() error = %v, wantErr %v", err, tt.expectError)
+			}
+			if mockConsumer.ConnectCalled != tt.expectConnectCall {
+				t.Errorf("Expected Connect to be called = %v, got %v", tt.expectConnectCall, mockConsumer.ConnectCalled)
+			}
+		})
+	}
+}
+
 func TestListenAndProcess(t *testing.T) {
 	qCfg := &config.QueueConfig{Name: "testQueue"}
 
