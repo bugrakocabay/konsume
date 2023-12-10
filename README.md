@@ -92,34 +92,35 @@ queues:
 ```
 
 ## Configuration
-| Parameter                        | Description                                                                                                    | Is Required?               |
-|:---------------------------------|:---------------------------------------------------------------------------------------------------------------|:---------------------------|
-| `providers`                      | List of configuration for queue sources                                                                        | yes                        |
-| `providers.name`                 | Name of the queue source                                                                                       | yes                        |
-| `providers.type`                 | Type of the queue source. Supported types are `rabbitmq` and `kafka`                                           | yes                        |
-| `providers.amqp-config`          | Configuration for RabbitMQ                                                                                     | yes (if type is rabbitmq)  |
-| `providers.amqp-config.host`     | Host of the RabbitMQ server                                                                                    | yes (if type is rabbitmq)  |
-| `providers.amqp-config.port`     | Port of the RabbitMQ server                                                                                    | yes (if type is rabbitmq)  |
-| `providers.amqp-config.username` | Username for the RabbitMQ server                                                                               | yes (if type is rabbitmq)  |
-| `providers.amqp-config.password` | Password for the RabbitMQ server                                                                               | yes (if type is rabbitmq)  |
-| `providers.kafka-config`         | Configuration for Kafka                                                                                        | yes (if type is kafka)     |
-| `providers.kafka-config.brokers` | List of Kafka brokers                                                                                          | yes (if type is kafka)     |
-| `providers.kafka-config.topic`   | Topic name for Kafka                                                                                           | yes (if type is kafka)     |
-| `providers.kafka-config.group`   | Group name for Kafka                                                                                           | yes (if type is kafka)     |
-| `queues`                         | List of configuration for queues                                                                               | yes                        |
-| `queues.name`                    | Name of the queue                                                                                              | yes                        |
-| `queues.provider`                | Name of the queue source                                                                                       | yes (should match a provider name )|
-| `queues.retry`                   | Retry mechanism for queue                                                                                      | no                         |
-| `queues.retry.enabled`           | Flag for enabling/disabling retry mechanism                                                                    | yes (if retry is enabled)  |
-| `queues.retry.strategy`          | Type of the retry mechanism. Supported types are `fixed`, `expo`, and `random`                                 | no (defaults to fixed)     |
-| `queues.retry.max_retries`       | Maximum amount of times that retrying will be triggered                                                        | yes (if retry is enabled)  |
-| `queues.retry.interval`          | Amount of time between retries                                                                                 | yes (if retry is enabled)  |
-| `queues.retry.threshold_status`  | Minimum HTTP status code to trigger retry mechanism, any status code above or equal this will trigger retrying | no (defaults to 500)       |
-| `queues.routes`                  | List of configuration for routes                                                                               | yes                        |
-| `queues.routes.name`             | Name of the route                                                                                              | yes                        |
-| `queues.routes.type`             | Type of the route. Currently only REST is supported                                                            | no (defaults to REST)      |
-| `queues.routes.method`           | HTTP method for the route                                                                                      | no (defaults to POST)      |
-| `queues.routes.url`              | URL for the route                                                                                              | yes                        |
-| `queues.routes.headers`          | List of headers for the route                                                                                  | no                         |
-| `queues.routes.body`             | List of key-values to customize body of the request                                                            | no                         |
-| `queues.routes.timeout`          | Timeout of the request                                                                                         | no (defaults to 10s)       |
+| Parameter                        | Description                                                                                                    | Is Required?                        |
+|:---------------------------------|:---------------------------------------------------------------------------------------------------------------|:------------------------------------|
+| `providers`                      | List of configuration for queue sources                                                                        | yes                                 |
+| `providers.name`                 | Name of the queue source                                                                                       | yes                                 |
+| `providers.type`                 | Type of the queue source. Supported types are `rabbitmq` and `kafka`                                           | yes                                 |
+| `providers.retry`                | Amount of times to retry connecting to queue source                                                            | no                                  |
+| `providers.amqp-config`          | Configuration for RabbitMQ                                                                                     | yes (if type is rabbitmq)           |
+| `providers.amqp-config.host`     | Host of the RabbitMQ server                                                                                    | yes (if type is rabbitmq)           |
+| `providers.amqp-config.port`     | Port of the RabbitMQ server                                                                                    | yes (if type is rabbitmq)           |
+| `providers.amqp-config.username` | Username for the RabbitMQ server                                                                               | yes (if type is rabbitmq)           |
+| `providers.amqp-config.password` | Password for the RabbitMQ server                                                                               | yes (if type is rabbitmq)           |
+| `providers.kafka-config`         | Configuration for Kafka                                                                                        | yes (if type is kafka)              |
+| `providers.kafka-config.brokers` | List of Kafka brokers                                                                                          | yes (if type is kafka)              |
+| `providers.kafka-config.topic`   | Topic name for Kafka                                                                                           | yes (if type is kafka)              |
+| `providers.kafka-config.group`   | Group name for Kafka                                                                                           | yes (if type is kafka)              |
+| `queues`                         | List of configuration for queues                                                                               | yes                                 |
+| `queues.name`                    | Name of the queue                                                                                              | yes                                 |
+| `queues.provider`                | Name of the queue source                                                                                       | yes (should match a provider name ) |
+| `queues.retry`                   | Retry mechanism for queue                                                                                      | no                                  |
+| `queues.retry.enabled`           | Flag for enabling/disabling retry mechanism                                                                    | yes (if retry is enabled)           |
+| `queues.retry.strategy`          | Type of the retry mechanism. Supported types are `fixed`, `expo`, and `random`                                 | no (defaults to fixed)              |
+| `queues.retry.max_retries`       | Maximum amount of times that retrying will be triggered                                                        | yes (if retry is enabled)           |
+| `queues.retry.interval`          | Amount of time between retries                                                                                 | yes (if retry is enabled)           |
+| `queues.retry.threshold_status`  | Minimum HTTP status code to trigger retry mechanism, any status code above or equal this will trigger retrying | no (defaults to 500)                |
+| `queues.routes`                  | List of configuration for routes                                                                               | yes                                 |
+| `queues.routes.name`             | Name of the route                                                                                              | yes                                 |
+| `queues.routes.type`             | Type of the route. Currently only REST is supported                                                            | no (defaults to REST)               |
+| `queues.routes.method`           | HTTP method for the route                                                                                      | no (defaults to POST)               |
+| `queues.routes.url`              | URL for the route                                                                                              | yes                                 |
+| `queues.routes.headers`          | List of headers for the route                                                                                  | no                                  |
+| `queues.routes.body`             | List of key-values to customize body of the request                                                            | no                                  |
+| `queues.routes.timeout`          | Timeout of the request                                                                                         | no (defaults to 10s)                |
