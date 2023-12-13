@@ -94,6 +94,7 @@ queues:
 ## Configuration
 | Parameter                        | Description                                                                                                    | Is Required?                        |
 |:---------------------------------|:---------------------------------------------------------------------------------------------------------------|:------------------------------------|
+| `debug`                          | Enable debug logging level                                                                                     | no                                  |
 | `providers`                      | List of configuration for queue sources                                                                        | yes                                 |
 | `providers.name`                 | Name of the queue source                                                                                       | yes                                 |
 | `providers.type`                 | Type of the queue source. Supported types are `rabbitmq` and `kafka`                                           | yes                                 |
