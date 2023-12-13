@@ -1,9 +1,8 @@
 name: docker_publish_latest
 
 on:
-  push:
-    branches:
-      - "main"
+  release:
+    types: [published]
 
 jobs:
   docker_publish_latest:
