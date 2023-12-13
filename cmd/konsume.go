@@ -16,16 +16,24 @@ import (
 )
 
 func Execute() {
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
+	slog.SetDefault(logger)
 	slog.Info("Starting konsume")
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		panic(err)
 	}
+	if cfg.Debug {
+		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	}
+
+	logger.Debug("Loaded configuration successfully")
 
 	consumers := make(map[string]queue.MessageQueueConsumer)
 	providerMap := make(map[string]*config.ProviderConfig)
 	for _, provider := range cfg.Providers {
+		slog.Debug("Initializing provider", "provider", provider.Name, "type", provider.Type)
 		switch provider.Type {
 		case common.QueueSourceRabbitMQ:
 			consumer := rabbitmq.NewConsumer(provider.AMQPConfig)

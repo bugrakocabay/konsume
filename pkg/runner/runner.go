@@ -73,7 +73,7 @@ func connectWithRetry(ctx context.Context, consumer queue.MessageQueueConsumer, 
 // listenAndProcess consumes messages from the queue and processes them
 func listenAndProcess(ctx context.Context, consumer queue.MessageQueueConsumer, qCfg *config.QueueConfig) error {
 	return consumer.Consume(ctx, qCfg.Name, func(msg []byte) error {
-		log.Printf("Received message from %s: %s", qCfg.Name, string(msg))
+		slog.Info("Received a message", "queue", qCfg.Name, "message", string(msg))
 		var (
 			messageData map[string]interface{}
 			err         error

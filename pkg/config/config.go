@@ -23,6 +23,9 @@ type Config struct {
 
 	// Queues is a list of queues that will be consumed
 	Queues []*QueueConfig `yaml:"queues"`
+
+	// Debug is a flag that enables debug logging
+	Debug bool `yaml:"debug"`
 }
 
 // LoadConfig loads the configuration from the config.yaml file
@@ -47,6 +50,7 @@ func LoadConfig() (*Config, error) {
 		slog.Error("Failed to unmarshal configuration file", "error", err)
 		return nil, unmarshalConfigFileError
 	}
+	slog.Debug("Loaded configuration successfully")
 
 	// Validate the configuration
 	err = cfg.ValidateAll()
@@ -78,6 +82,9 @@ func (c *Config) ValidateAll() error {
 		if err != nil {
 			return err
 		}
+	}
+	if c.Debug {
+		slog.Debug("Configuration validated successfully")
 	}
 	return nil
 }

@@ -26,6 +26,7 @@ func NewConsumer(cfg *config.AMQPConfig) *Consumer {
 
 // Connect creates a connection to RabbitMQ and a channel
 func (c *Consumer) Connect(ctx context.Context) error {
+	slog.Debug("Attempting to connect to RabbitMQ", "host", c.config.Host, "port", c.config.Port)
 	var err error
 	cfg := c.config
 	connectionString := fmt.Sprintf("amqp://%s:%s@%s:%d/", cfg.Username, cfg.Password, cfg.Host, cfg.Port)
@@ -55,6 +56,7 @@ func (c *Consumer) Consume(ctx context.Context, queueName string, handler func(m
 	if err != nil {
 		return err
 	}
+	slog.Debug("Starting to consume messages from RabbitMQ", "queueName", queueName)
 	msgs, err := c.channel.Consume(
 		queueName,
 		"",    // Consumer tag - Identifier for the consumer
@@ -81,6 +83,7 @@ func (c *Consumer) Consume(ctx context.Context, queueName string, handler func(m
 
 // Close closes the connection to RabbitMQ
 func (c *Consumer) Close() error {
+	slog.Debug("Closing RabbitMQ connection and channel")
 	if c.channel != nil {
 		if err := c.channel.Close(); err != nil {
 			return err
@@ -91,5 +94,6 @@ func (c *Consumer) Close() error {
 			return err
 		}
 	}
+	slog.Debug("RabbitMQ connection and channel closed successfully")
 	return nil
 }
