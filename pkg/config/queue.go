@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/bugrakocabay/konsume/pkg/common"
@@ -16,9 +17,12 @@ var (
 	intervalNotDefinedError   = errors.New("interval not defined")
 	invalidStrategyError      = errors.New("invalid strategy")
 
-	noRoutesDefinedError     = errors.New("no routes defined")
-	routeNameNotDefinedError = errors.New("route name not defined")
-	urlNotDefinedError       = errors.New("url not defined")
+	noRoutesDefinedError                 = errors.New("no routes defined")
+	routeNameNotDefinedError             = errors.New("route name not defined")
+	urlNotDefinedError                   = errors.New("url not defined")
+	bodyNotDefinedError                  = errors.New("when using graphql type, body must be defined")
+	invalidBodyForGraphQLError           = errors.New("when using graphql type, body must contain query or mutation")
+	bodyNotContainsStringForGraphQLError = errors.New("when using graphql type, body must contain string for query or mutation")
 )
 
 // QueueConfig is the main configuration information needed to consume a queue
@@ -133,7 +137,32 @@ func (queue *QueueConfig) validateQueue(providers []*ProviderConfig) error {
 				route.Method = "POST"
 			}
 			if route.Type == "" {
-				route.Type = "REST"
+				route.Type = common.RouteTypeREST
+			}
+			if route.Type == common.RouteTypeGraphQL {
+				if len(route.Body) == 0 {
+					return bodyNotDefinedError
+				}
+				v1, ok := route.Body["query"]
+				v2, ok2 := route.Body["mutation"]
+				if !ok && !ok2 {
+					return invalidBodyForGraphQLError
+				}
+				if ok || ok2 {
+					if ok {
+						_, ok = v1.(string)
+					}
+					if ok2 {
+						_, ok2 = v2.(string)
+					}
+					if !ok && !ok2 {
+						return bodyNotContainsStringForGraphQLError
+					}
+				}
+				if route.Method != "POST" {
+					slog.Debug("GraphQL route method is not POST, setting it to POST", "route", route.Name)
+					route.Method = "POST"
+				}
 			}
 			if route.Timeout == 0 {
 				route.Timeout = 10 * time.Second
