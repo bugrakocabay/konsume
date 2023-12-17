@@ -454,6 +454,82 @@ queues:
 			expectedError: urlNotDefinedError,
 		},
 		{
+			name:       "should throw error if type is graphql and body is not defined for queue route config",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    routes:
+      - name: "test-route"
+        type: "graphql"
+        url: "http://localhost:8080"
+`,
+			},
+			expectedError: bodyNotDefinedError,
+		},
+		{
+			name:       "should throw error if type is graphql and body is not valid for queue route config",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    routes:
+      - name: "test-route"
+        type: "graphql"
+        url: "http://localhost:8080"
+        body:
+          invalid: "invalid"
+`,
+			},
+			expectedError: invalidBodyForGraphQLError,
+		},
+		{
+			name:       "should throw error if type is graphql and body does not contain string for query or mutation for queue route config",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    routes:
+      - name: "test-route"
+        type: "graphql"
+        url: "http://localhost:8080"
+        body:
+          mutation: 1
+`,
+			},
+			expectedError: bodyNotContainsStringForGraphQLError,
+		},
+		{
 			name:       "should throw error if max retries is not defined for queue retry config",
 			configPath: "./config.yaml",
 			pathAndContent: map[string]string{
