@@ -10,3 +10,8 @@ const (
 	RetryStrategyExpo  = "expo"
 	RetryStrategyRand  = "random"
 )
+
+const (
+	RouteTypeREST    = "REST"
+	RouteTypeGraphQL = "graphql"
+)

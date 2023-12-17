@@ -13,7 +13,6 @@ import (
 	"github.com/bugrakocabay/konsume/pkg/config"
 	"github.com/bugrakocabay/konsume/pkg/queue"
 	"github.com/bugrakocabay/konsume/pkg/requester"
-	"github.com/bugrakocabay/konsume/pkg/util"
 )
 
 // StartConsumers starts the consumers for all queues
@@ -68,36 +67,6 @@ func connectWithRetry(ctx context.Context, consumer queue.MessageQueueConsumer, 
 		return err
 	}
 	return err
-}
-
-// listenAndProcess consumes messages from the queue and processes them
-func listenAndProcess(ctx context.Context, consumer queue.MessageQueueConsumer, qCfg *config.QueueConfig) error {
-	return consumer.Consume(ctx, qCfg.Name, func(msg []byte) error {
-		slog.Info("Received a message", "queue", qCfg.Name, "message", string(msg))
-		var (
-			messageData map[string]interface{}
-			err         error
-			body        []byte
-		)
-		for _, rCfg := range qCfg.Routes {
-			if len(rCfg.Body) > 0 {
-				messageData, err = util.ParseJSONToMap(msg)
-				if err != nil {
-					slog.Error("Failed to parse message", "error", err)
-				}
-				body, err = util.ProcessTemplate(rCfg.Body, messageData)
-				if err != nil {
-					slog.Error("Failed to process template", "error", err)
-					body = msg
-				}
-			} else {
-				body = msg
-			}
-			rqstr := requester.NewRequester(rCfg.URL, rCfg.Method, body, rCfg.Headers)
-			sendRequestWithStrategy(qCfg, rCfg, body, rqstr)
-		}
-		return nil
-	})
 }
 
 // sendRequestWithStrategy sends the request to the given endpoint and makes use of the given strategy
