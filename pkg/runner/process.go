@@ -13,6 +13,7 @@ import (
 	"github.com/bugrakocabay/konsume/pkg/util"
 )
 
+// listenAndProcess listens the queue and processes the messages
 func listenAndProcess(ctx context.Context, consumer queue.MessageQueueConsumer, qCfg *config.QueueConfig) error {
 	return consumer.Consume(ctx, qCfg.Name, func(msg []byte) error {
 		slog.Info("Received a message", "queue", qCfg.Name, "message", string(msg))
@@ -35,6 +36,7 @@ func listenAndProcess(ctx context.Context, consumer queue.MessageQueueConsumer, 
 	})
 }
 
+// prepareRequestBody prepares the request body according to the route type
 func prepareRequestBody(rCfg *config.RouteConfig, messageData map[string]interface{}) ([]byte, error) {
 	if rCfg.Type == common.RouteTypeGraphQL {
 		return prepareGraphQLBody(rCfg, messageData)
@@ -43,6 +45,7 @@ func prepareRequestBody(rCfg *config.RouteConfig, messageData map[string]interfa
 	}
 }
 
+// prepareGraphQLBody creates a graphql request body from the given route config and message data
 func prepareGraphQLBody(rCfg *config.RouteConfig, messageData map[string]interface{}) ([]byte, error) {
 	graphqlOperation := getGraphQLOperation(rCfg.Body)
 	if graphqlOperation == "" {

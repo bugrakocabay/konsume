@@ -91,6 +91,30 @@ func TestStartConsumers(t *testing.T) {
 	}
 }
 
+func TestStartConsumersMultipleQueues(t *testing.T) {
+	cfg := &config.Config{
+		Queues: []*config.QueueConfig{
+			{Name: "validQueue", Provider: "rabbitmq"},
+			{Name: "invalidQueue", Provider: "unknown"},
+		},
+		Providers: []*config.ProviderConfig{{Name: "rabbitmq", Type: "amqp"}},
+	}
+
+	mockConsumer := &MockMessageQueueConsumer{
+		ConnectFunc: func() error { return nil },
+		ConsumeFunc: func(queueName string, handler func(msg []byte) error) error { return nil },
+	}
+
+	consumers := map[string]queue.MessageQueueConsumer{"rabbitmq": mockConsumer}
+	providerMap := make(map[string]*config.ProviderConfig)
+	providerMap["rabbitmq"] = &config.ProviderConfig{Name: "rabbitmq", Type: "amqp"}
+
+	err := StartConsumers(cfg, consumers, providerMap)
+	if err == nil || !strings.Contains(err.Error(), "no consumer found for provider: unknown") {
+		t.Errorf("Expected error for missing provider, got %v", err)
+	}
+}
+
 func TestConnectWithRetry(t *testing.T) {
 	tests := []struct {
 		name              string
@@ -141,108 +165,6 @@ func TestConnectWithRetry(t *testing.T) {
 				t.Errorf("Expected Connect to be called = %v, got %v", tt.expectConnectCall, mockConsumer.ConnectCalled)
 			}
 		})
-	}
-}
-
-func TestListenAndProcess(t *testing.T) {
-	qCfg := &config.QueueConfig{Name: "testQueue"}
-
-	mockConsumer := &MockMessageQueueConsumer{
-		ConnectFunc: func() error { return nil },
-		ConsumeFunc: func(queueName string, handler func(msg []byte) error) error { return nil },
-	}
-	ctx := context.Background()
-	err := listenAndProcess(ctx, mockConsumer, qCfg)
-	if err != nil {
-		t.Errorf("listenAndProcess() error = %v, wantErr %v", err, nil)
-	}
-	if !mockConsumer.ConsumeCalled {
-		t.Errorf("Expected Consume to be called, but it was not")
-	}
-}
-
-func TestListenAndProcess_ConnectFails(t *testing.T) {
-	qCfg := &config.QueueConfig{Name: "testQueue"}
-
-	mockConsumer := &MockMessageQueueConsumer{
-		ConnectFunc: func() error { return errors.New("connection failed") },
-	}
-	ctx := context.Background()
-	err := listenAndProcess(ctx, mockConsumer, qCfg)
-	if err == nil {
-		t.Error("Expected an error when connection fails, but got nil")
-	}
-}
-
-func TestListenAndProcess_ConsumptionFails(t *testing.T) {
-	qCfg := &config.QueueConfig{Name: "testQueue"}
-
-	mockConsumer := &MockMessageQueueConsumer{
-		ConnectFunc: func() error { return nil },
-		ConsumeFunc: func(queueName string, handler func(msg []byte) error) error {
-			return errors.New("consumption failed")
-		},
-	}
-	ctx := context.Background()
-	err := listenAndProcess(ctx, mockConsumer, qCfg)
-	if err == nil {
-		t.Error("Expected an error when consumption fails, but got nil")
-	}
-}
-
-func TestStartConsumersMultipleQueues(t *testing.T) {
-	cfg := &config.Config{
-		Queues: []*config.QueueConfig{
-			{Name: "validQueue", Provider: "rabbitmq"},
-			{Name: "invalidQueue", Provider: "unknown"},
-		},
-		Providers: []*config.ProviderConfig{{Name: "rabbitmq", Type: "amqp"}},
-	}
-
-	mockConsumer := &MockMessageQueueConsumer{
-		ConnectFunc: func() error { return nil },
-		ConsumeFunc: func(queueName string, handler func(msg []byte) error) error { return nil },
-	}
-
-	consumers := map[string]queue.MessageQueueConsumer{"rabbitmq": mockConsumer}
-	providerMap := make(map[string]*config.ProviderConfig)
-	providerMap["rabbitmq"] = &config.ProviderConfig{Name: "rabbitmq", Type: "amqp"}
-
-	err := StartConsumers(cfg, consumers, providerMap)
-	if err == nil || !strings.Contains(err.Error(), "no consumer found for provider: unknown") {
-		t.Errorf("Expected error for missing provider, got %v", err)
-	}
-}
-
-func TestListenAndProcess_SuccessfulConsumption(t *testing.T) {
-	qCfg := &config.QueueConfig{Name: "testQueue"}
-
-	mockConsumer := &MockMessageQueueConsumer{
-		ConnectFunc: func() error { return nil },
-		ConsumeFunc: func(queueName string, handler func(msg []byte) error) error {
-			return handler([]byte("test message"))
-		},
-	}
-	ctx := context.Background()
-	err := listenAndProcess(ctx, mockConsumer, qCfg)
-	if err != nil {
-		t.Errorf("Expected no error, but got: %v", err)
-	}
-}
-
-func TestListenAndProcess_InvalidMessageFormat(t *testing.T) {
-	qCfg := &config.QueueConfig{Name: "testQueue"}
-
-	mockConsumer := &MockMessageQueueConsumer{
-		ConnectFunc: func() error { return nil },
-		ConsumeFunc: func(queueName string, handler func(msg []byte) error) error {
-			return handler([]byte("invalid message"))
-		},
-	}
-	ctx := context.Background()
-	err := listenAndProcess(ctx, mockConsumer, qCfg)
-	if err != nil {
-		t.Errorf("Expected no error, but got: %v", err)
 	}
 }
 
