@@ -36,3 +36,27 @@ func ProcessTemplate(template map[string]interface{}, messageData map[string]int
 
 	return bodyBytes, nil
 }
+
+// ProcessGraphQLTemplate processes the graphql template and returns the processed body
+func ProcessGraphQLTemplate(graphqlTemplate string, messageData map[string]interface{}) (string, error) {
+	processedQuery := graphqlTemplate
+
+	for key, value := range messageData {
+		placeholder := fmt.Sprintf("{{%s}}", key)
+		var valueStr string
+
+		// Convert different types to their string representations
+		switch v := value.(type) {
+		case string:
+			valueStr = fmt.Sprintf("\"%s\"", v)
+		case int, float64, bool:
+			valueStr = fmt.Sprintf("%v", v)
+		default:
+			return "", fmt.Errorf("unsupported type for key %s", key)
+		}
+
+		processedQuery = strings.Replace(processedQuery, placeholder, valueStr, -1)
+	}
+
+	return processedQuery, nil
+}
