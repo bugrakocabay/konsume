@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"log/slog"
@@ -80,18 +81,46 @@ func listenAndProcess(ctx context.Context, consumer queue.MessageQueueConsumer, 
 			body        []byte
 		)
 		for _, rCfg := range qCfg.Routes {
-			if len(rCfg.Body) > 0 {
+			if rCfg.Type == common.RouteTypeGraphQL {
 				messageData, err = util.ParseJSONToMap(msg)
 				if err != nil {
 					slog.Error("Failed to parse message", "error", err)
 				}
-				body, err = util.ProcessTemplate(rCfg.Body, messageData)
+				graphqlOperation, ok := rCfg.Body["query"].(string)
+				if !ok {
+					graphqlOperation, ok = rCfg.Body["mutation"].(string)
+					if !ok {
+						slog.Error("No query or mutation found in graphql body")
+						continue
+					}
+				}
+				bodyStr, err := util.ProcessGraphQLTemplate(graphqlOperation, messageData)
 				if err != nil {
-					slog.Error("Failed to process template", "error", err)
-					body = msg
+					slog.Error("Failed to process graphql template", "error", err)
+					continue
+				}
+				graphqlBody := map[string]string{
+					"query": bodyStr,
+				}
+				body, err = json.Marshal(graphqlBody)
+				if err != nil {
+					slog.Error("Failed to marshal graphql body", "error", err)
+					continue
 				}
 			} else {
-				body = msg
+				if len(rCfg.Body) > 0 {
+					messageData, err = util.ParseJSONToMap(msg)
+					if err != nil {
+						slog.Error("Failed to parse message", "error", err)
+					}
+					body, err = util.ProcessTemplate(rCfg.Body, messageData)
+					if err != nil {
+						slog.Error("Failed to process template", "error", err)
+						body = msg
+					}
+				} else {
+					body = msg
+				}
 			}
 			rqstr := requester.NewRequester(rCfg.URL, rCfg.Method, body, rCfg.Headers)
 			sendRequestWithStrategy(qCfg, rCfg, body, rqstr)
