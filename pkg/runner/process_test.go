@@ -135,3 +135,14 @@ func TestGetGraphQLOperation(t *testing.T) {
 		t.Errorf("getGraphQLOperation mutation failed")
 	}
 }
+
+func TestAppendQueryParams(t *testing.T) {
+	url := "http://localhost:8080"
+	queryParams := map[string]string{"key1": "value1", "key2": "value2"}
+
+	urlWithQueryParams := appendQueryParams(url, queryParams)
+	expectedURL := "http://localhost:8080?key1=value1&key2=value2"
+	if urlWithQueryParams != expectedURL {
+		t.Errorf("appendQueryParams failed, got: %s, expected: %s", urlWithQueryParams, expectedURL)
+	}
+}
