@@ -29,6 +29,7 @@ func listenAndProcess(ctx context.Context, consumer queue.MessageQueueConsumer, 
 				slog.Error("Failed to prepare request body", "error", err)
 				continue
 			}
+			rCfg.URL = appendQueryParams(rCfg.URL, rCfg.Query)
 			rqstr := requester.NewRequester(rCfg.URL, rCfg.Method, body, rCfg.Headers)
 			sendRequestWithStrategy(qCfg, rCfg, body, rqstr)
 		}
@@ -73,4 +74,15 @@ func getGraphQLOperation(bodyMap map[string]interface{}) string {
 		return operation
 	}
 	return ""
+}
+
+func appendQueryParams(url string, queryParams map[string]string) string {
+	if len(queryParams) == 0 {
+		return url
+	}
+	url += "?"
+	for key, value := range queryParams {
+		url += fmt.Sprintf("%s=%s&", key, value)
+	}
+	return url[:len(url)-1]
 }
