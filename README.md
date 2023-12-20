@@ -110,7 +110,7 @@ queues:
 ## Configuration
 
 | Parameter                        | Description                                                                                                    | Is Required?                        |
-| :------------------------------- | :------------------------------------------------------------------------------------------------------------- | :---------------------------------- |
+|:---------------------------------|:---------------------------------------------------------------------------------------------------------------| :---------------------------------- |
 | `debug`                          | Enable debug logging level                                                                                     | no                                  |
 | `providers`                      | List of configuration for queue sources                                                                        | yes                                 |
 | `providers.name`                 | Name of the queue source                                                                                       | yes                                 |
@@ -141,6 +141,7 @@ queues:
 | `queues.routes.url`              | URL for the route                                                                                              | yes                                 |
 | `queues.routes.headers`          | List of headers for the route                                                                                  | no                                  |
 | `queues.routes.body`             | List of key-values to customize body of the request                                                            | no                                  |
+| `queues.routes.query`            | List of key-values to customize query params of the request                                                    | no                                  |
 | `queues.routes.timeout`          | Timeout of the request                                                                                         | no (defaults to 10s)                |
 
 ## FAQ
