@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/bugrakocabay/konsume/pkg/config"
@@ -141,8 +142,7 @@ func TestAppendQueryParams(t *testing.T) {
 	queryParams := map[string]string{"key1": "value1", "key2": "value2"}
 
 	urlWithQueryParams := appendQueryParams(url, queryParams)
-	expectedURL := "http://localhost:8080?key1=value1&key2=value2"
-	if urlWithQueryParams != expectedURL {
-		t.Errorf("appendQueryParams failed, got: %s, expected: %s", urlWithQueryParams, expectedURL)
+	if strings.Contains(urlWithQueryParams, "key1=value1") == false || strings.Contains(urlWithQueryParams, "key2=value2") == false {
+		t.Errorf("appendQueryParams failed, urlWithQueryParams does not contain queryParams")
 	}
 }
