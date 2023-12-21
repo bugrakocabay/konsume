@@ -1,0 +1,65 @@
+debug: true
+providers:
+  - name: "rabbit-queue"
+    type: "rabbitmq"
+    retry: 5
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+  - name: "kafka-queue"
+    type: "kafka"
+    retry: 5
+    kafka-config:
+      brokers:
+        - "kafka:9092"
+      topic: "your_topic_name"
+      group: "group1"
+
+queues:
+  - name: "queue-for-rabbit"
+    provider: "rabbit-queue"
+    retry:
+      enabled: true
+      threshold_status: 500
+      max_retries: 2
+      interval: 5s
+      strategy: "fixed"
+    routes:
+      - name: "ServiceA_Queue"
+        type: "REST"
+        method: "POST"
+        url: "https://someurl.com"
+        body:
+          key1: "{{hello}}"
+          custom: "a custom value"
+          int: 12345546856
+        timeout: 5s
+        query:
+          key1: "qwerty"
+  - name: "queue-for-kafka"
+    provider: "kafka-queue"
+    retry:
+      enabled: true
+      threshold_status: 400
+      max_retries: 2
+      interval: 5s
+      strategy: "fixed"
+    routes:
+      - name: "ServiceA_Queue2"
+        type: "graphql"
+        method: "POST"
+        url: "https://someotherurl.com/graphql"
+        headers:
+          Content-Type: "application/json"
+        body:
+          mutation: |
+            mutation {
+              addUser(name: {{name1}}, email: {{email1}}) {
+                id
+                name
+                email
+              }
+            }
+        timeout: 10s

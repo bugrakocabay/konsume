@@ -64,6 +64,7 @@ go install github.com/bugrakocabay/konsume@latest
 ## Usage
 
 konsume depends on a YAML configuration file for defining queues, routes, and behaviors. There are two main sections in the configuration file: `providers` and `queues`. In the `providers` section, you can define the message queue providers that konsume will use to consume messages. In the `queues` section, you can define the queues that konsume will consume messages from and the routes that konsume will use to send HTTP requests.
+You can also find detailed usage examples in the [examples](.examples) directory.
 
 **A simple usage for konsume with RabbitMQ:**
 
