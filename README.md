@@ -248,3 +248,20 @@ queues:
 <li><b>Seek Community Help:</b> If you're still stuck, consider asking for help in <a href="https://github.com/bugrakocabay/konsume/issues">issues</a> or <a href="https://github.com/bugrakocabay/konsume/discussions">discussions</a>.</li>
 </ol>
 </details>
+
+### Contributing
+🌟 Your contributions are welcome!
+
+Whether you're looking to fix bugs, add new features, or improve documentation, your help is greatly appreciated. Contributing to konsume is not only a great way to enhance this tool, but it's also an excellent opportunity to get involved with a community of like-minded individuals.
+
+Here's how you can contribute:
+
+Report Issues: Found a bug or have a suggestion? Open an issue and let us know!
+Submit Pull Requests: Have a fix or a new feature? Submit a pull request!
+Feedback and Ideas: Share your thoughts and ideas on how we can improve konsume.
+Documentation: Help us improve or translate the documentation.
+Before contributing, please read our [Contributing Guidelines](./CONTRIBUTING.md) for more information on how to get started.
+
+💡 No contribution is too small – whether it's fixing typos, improving code readability, or updating documentation, all contributions are valuable and appreciated!
+
+Join us in making konsume better for everyone! 🚀
