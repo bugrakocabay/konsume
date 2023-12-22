@@ -21,6 +21,12 @@ var (
 	brokersNotDefinedError     = errors.New("brokers not defined")
 	topicNotDefinedError       = errors.New("topic not defined")
 	groupNotDefinedError       = errors.New("group not defined")
+
+	activemqConfigNotDefinedError = errors.New("stomp config not defined")
+	stompHostNotDefinedError      = errors.New("stomp host not defined")
+	stompPortNotDefinedError      = errors.New("stomp port not defined")
+	stompUsernameNotDefinedError  = errors.New("stomp username not defined")
+	stompPasswordNotDefinedError  = errors.New("stomp password not defined")
 )
 
 // ProviderConfig is the main configuration information needed to connect to a provider
@@ -39,6 +45,9 @@ type ProviderConfig struct {
 
 	// KafkaConfig is the configuration for the Kafka provider
 	KafkaConfig *KafkaConfig `yaml:"kafka-config,omitempty"`
+
+	// StompMQConfig is the configuration for the ActiveMQ provider
+	StompMQConfig *StompConfig `yaml:"stomp-config,omitempty"`
 }
 
 // AMQPConfig is the main configuration information needed to connect to an AMQP provider
@@ -68,6 +77,20 @@ type KafkaConfig struct {
 	Group string `yaml:"group,omitempty"`
 }
 
+type StompConfig struct {
+	// Host is the host of the queue
+	Host string `yaml:"host,omitempty"`
+
+	// Port is the port of the queue
+	Port int `yaml:"port,omitempty"`
+
+	// Username is the username of the queue
+	Username string `yaml:"username,omitempty"`
+
+	// Password is the password of the queue
+	Password string `yaml:"password,omitempty"`
+}
+
 // ValidateProvider validates the ProviderConfig struct
 func (p *ProviderConfig) validateProvider() error {
 	if len(p.Name) == 0 {
@@ -78,7 +101,8 @@ func (p *ProviderConfig) validateProvider() error {
 		return providerTypeNotDefinedError
 	}
 
-	if p.Type != common.QueueSourceRabbitMQ && p.Type != common.QueueSourceKafka {
+	if p.Type != common.QueueSourceRabbitMQ && p.Type != common.QueueSourceKafka &&
+		p.Type != common.QueueSourceActiveMQ {
 		return invalidProviderTypeError
 	}
 
@@ -99,6 +123,16 @@ func (p *ProviderConfig) validateProvider() error {
 		}
 
 		err := p.KafkaConfig.validateKafkaConfig()
+		if err != nil {
+			return err
+		}
+	}
+
+	if p.Type == common.QueueSourceActiveMQ {
+		if p.StompMQConfig == nil {
+			return activemqConfigNotDefinedError
+		}
+		err := p.StompMQConfig.validateStompConfig()
 		if err != nil {
 			return err
 		}
@@ -142,5 +176,24 @@ func (k *KafkaConfig) validateKafkaConfig() error {
 		return groupNotDefinedError
 	}
 
+	return nil
+}
+
+func (s *StompConfig) validateStompConfig() error {
+	if len(s.Host) == 0 {
+		return stompHostNotDefinedError
+	}
+
+	if s.Port == 0 {
+		return stompPortNotDefinedError
+	}
+
+	if len(s.Username) == 0 {
+		return stompUsernameNotDefinedError
+	}
+
+	if len(s.Password) == 0 {
+		return stompHostNotDefinedError
+	}
 	return nil
 }
