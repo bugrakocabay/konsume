@@ -20,14 +20,20 @@ func listenAndProcess(ctx context.Context, consumer queue.MessageQueueConsumer, 
 
 		messageData, err := util.ParseJSONToMap(msg)
 		if err != nil {
-			slog.Error("Failed to parse message", "error", err)
+			return err
 		}
 
 		for _, rCfg := range qCfg.Routes {
-			body, err := prepareRequestBody(rCfg, messageData)
-			if err != nil {
-				slog.Error("Failed to prepare request body", "error", err)
-				continue
+			var body []byte
+
+			if len(rCfg.Body) > 0 {
+				body, err = prepareRequestBody(rCfg, messageData)
+				if err != nil {
+					slog.Error("Failed to prepare request body", "error", err)
+					continue
+				}
+			} else {
+				body = msg
 			}
 			rCfg.URL = appendQueryParams(rCfg.URL, rCfg.Query)
 			rqstr := requester.NewRequester(rCfg.URL, rCfg.Method, body, rCfg.Headers)
