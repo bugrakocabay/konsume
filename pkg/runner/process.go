@@ -66,10 +66,7 @@ func prepareGraphQLBody(rCfg *config.RouteConfig, messageData map[string]interfa
 }
 
 func prepareRESTBody(rCfg *config.RouteConfig, messageData map[string]interface{}) ([]byte, error) {
-	if len(rCfg.Body) > 0 {
-		return util.ProcessTemplate(rCfg.Body, messageData)
-	}
-	return nil, nil
+	return util.ProcessTemplate(rCfg.Body, messageData)
 }
 
 func getGraphQLOperation(bodyMap map[string]interface{}) string {
