@@ -61,7 +61,7 @@ func TestListenAndProcess_SuccessfulConsumption(t *testing.T) {
 	mockConsumer := &MockMessageQueueConsumer{
 		ConnectFunc: func() error { return nil },
 		ConsumeFunc: func(queueName string, handler func(msg []byte) error) error {
-			return handler([]byte("test message"))
+			return handler([]byte("{\"key\":\"value\"}"))
 		},
 	}
 	ctx := context.Background()
@@ -82,8 +82,8 @@ func TestListenAndProcess_InvalidMessageFormat(t *testing.T) {
 	}
 	ctx := context.Background()
 	err := listenAndProcess(ctx, mockConsumer, qCfg)
-	if err != nil {
-		t.Errorf("Expected no error, but got: %v", err)
+	if err == nil {
+		t.Error("Expected an error when message format is invalid, but got nil")
 	}
 }
 
