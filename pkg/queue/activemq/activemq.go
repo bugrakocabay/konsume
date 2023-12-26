@@ -48,8 +48,14 @@ func (c *Consumer) Consume(ctx context.Context, queueName string, handler func(m
 		return err
 	}
 	go func() {
-		for v := range sub.C {
-			handler(v.Body)
+		for {
+			m, err := sub.Read()
+			if err != nil {
+				slog.Error("Failed to read message from ActiveMQ", "error", err)
+			}
+			if err = handler(m.Body); err != nil {
+				slog.Error("Failed to process message", "error", err)
+			}
 		}
 	}()
 	return nil
