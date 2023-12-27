@@ -37,7 +37,7 @@ func listenAndProcess(ctx context.Context, consumer queue.MessageQueueConsumer, 
 			}
 			rCfg.URL = appendQueryParams(rCfg.URL, rCfg.Query)
 			rqstr := requester.NewRequester(rCfg.URL, rCfg.Method, body, rCfg.Headers)
-			sendRequestWithStrategy(qCfg, rCfg, body, rqstr)
+			sendRequestWithStrategy(qCfg, rCfg, rqstr)
 		}
 		return nil
 	})

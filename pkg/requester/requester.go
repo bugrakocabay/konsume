@@ -9,7 +9,7 @@ import (
 
 // HTTPRequester is an interface for sending HTTP requests, useful for mocking in tests
 type HTTPRequester interface {
-	SendRequest() *http.Response
+	SendRequest() (*http.Response, error)
 }
 
 // Requester is the struct that contains the request information.
@@ -31,7 +31,7 @@ func NewRequester(endpoint, method string, body []byte, headers map[string]strin
 }
 
 // SendRequest sends the request to the given endpoint.
-func (r *Requester) SendRequest() *http.Response {
+func (r *Requester) SendRequest() (*http.Response, error) {
 	var (
 		resp *http.Response
 		err  error
@@ -45,7 +45,7 @@ func (r *Requester) SendRequest() *http.Response {
 	req, err := http.NewRequest(r.Method, r.Endpoint, body)
 	if err != nil {
 		slog.Error("Failed to create request", "error", err)
-		return nil
+		return nil, err
 	}
 	if len(r.Headers) > 0 {
 		for k, v := range r.Headers {
@@ -56,9 +56,9 @@ func (r *Requester) SendRequest() *http.Response {
 	resp, err = http.DefaultClient.Do(req)
 	if err != nil {
 		slog.Error("Failed to send request", "error", err)
-		return nil
+		return resp, err
 	}
 	defer resp.Body.Close()
 
-	return resp
+	return resp, nil
 }
