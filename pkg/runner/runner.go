@@ -6,6 +6,7 @@ import (
 	"log"
 	"log/slog"
 	"math/rand"
+	"net/http"
 	"sync"
 	"time"
 
@@ -69,30 +70,51 @@ func connectWithRetry(ctx context.Context, consumer queue.MessageQueueConsumer, 
 	return err
 }
 
-// sendRequestWithStrategy sends the request to the given endpoint and makes use of the given strategy
-func sendRequestWithStrategy(qCfg *config.QueueConfig, rCfg *config.RouteConfig, msg []byte, requester requester.HTTPRequester) {
-	resp := requester.SendRequest()
-	slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode)
-	retry := qCfg.Retry
-	if retry != nil && resp.StatusCode >= retry.ThresholdStatus {
-		for i := 1; i <= retry.MaxRetries; i++ {
-			slog.Info("Retrying", "route", rCfg.Name, "strategy", retry.Strategy, "retry", i)
-			switch retry.Strategy {
-			case common.RetryStrategyFixed:
-				time.Sleep(retry.Interval)
-			case common.RetryStrategyExpo:
-				time.Sleep(retry.Interval * time.Duration(i))
-			case common.RetryStrategyRand:
-				time.Sleep(time.Duration(rand.Intn(int(retry.Interval))))
-			default:
-				slog.Error("Invalid retry strategy", "strategy", retry.Strategy)
-				break
-			}
-			resp = requester.SendRequest()
+// sendRequestWithStrategy attempts to send an HTTP request and retries based on the provided configuration
+func sendRequestWithStrategy(qCfg *config.QueueConfig, rCfg *config.RouteConfig, requester requester.HTTPRequester) {
+	resp, err := requester.SendRequest()
+	if err != nil || shouldRetry(resp, qCfg.Retry) {
+		retryRequest(qCfg, rCfg, requester)
+	} else {
+		if resp != nil {
 			slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode)
-			if resp.StatusCode < retry.ThresholdStatus {
-				break
-			}
 		}
+	}
+}
+
+// shouldRetry determines whether a request should be retried based on the response and retry configuration
+func shouldRetry(resp *http.Response, retryConfig *config.RetryConfig) bool {
+	if retryConfig == nil {
+		return false
+	}
+	return resp == nil || resp.StatusCode >= retryConfig.ThresholdStatus
+}
+
+// retryRequest handles the retry logic for a request, attempting retries as configured
+func retryRequest(qCfg *config.QueueConfig, rCfg *config.RouteConfig, requester requester.HTTPRequester) {
+	for i := 1; i <= qCfg.Retry.MaxRetries; i++ {
+		time.Sleep(calculateRetryInterval(qCfg.Retry, i))
+		resp, err := requester.SendRequest()
+		if err == nil && !shouldRetry(resp, qCfg.Retry) {
+			if resp != nil {
+				slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode)
+			}
+			return
+		}
+	}
+}
+
+// calculateRetryInterval computes the time to wait before a retry attempt based on the retry strategy
+func calculateRetryInterval(retryConfig *config.RetryConfig, attempt int) time.Duration {
+	switch retryConfig.Strategy {
+	case common.RetryStrategyFixed:
+		return retryConfig.Interval
+	case common.RetryStrategyExpo:
+		return retryConfig.Interval * time.Duration(attempt)
+	case common.RetryStrategyRand:
+		return time.Duration(rand.Intn(int(retryConfig.Interval)))
+	default:
+		slog.Error("Invalid retry strategy", "strategy", retryConfig.Strategy)
+		return 0
 	}
 }
