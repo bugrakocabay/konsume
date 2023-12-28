@@ -3,6 +3,7 @@ module github.com/bugrakocabay/konsume
 go 1.21
 
 require (
+	github.com/go-stomp/stomp/v3 v3.0.5
 	github.com/rabbitmq/amqp091-go v1.9.0
 	github.com/segmentio/kafka-go v0.4.47
 	gopkg.in/yaml.v3 v3.0.1
