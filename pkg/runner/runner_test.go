@@ -22,13 +22,13 @@ type MockHTTPRequester struct {
 	CallCount    int
 }
 
-func (m *MockHTTPRequester) SendRequest() *http.Response {
+func (m *MockHTTPRequester) SendRequest() (*http.Response, error) {
 	m.CallCount++
 
 	if m.MockError != nil {
-		return nil
+		return nil, m.MockError
 	}
-	return m.MockResponse
+	return m.MockResponse, nil
 }
 
 type MockMessageQueueConsumer struct {
@@ -311,7 +311,7 @@ func TestSendRequestWithStrategy(t *testing.T) {
 				},
 			}
 			startTime := time.Now()
-			sendRequestWithStrategy(qCfg, tt.route, []byte("test"), mockHTTPRequester)
+			sendRequestWithStrategy(qCfg, tt.route, mockHTTPRequester)
 			duration := time.Since(startTime)
 
 			if mockHTTPRequester.CallCount != tt.expectedCalls {

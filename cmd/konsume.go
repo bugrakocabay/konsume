@@ -10,6 +10,7 @@ import (
 	"github.com/bugrakocabay/konsume/pkg/common"
 	"github.com/bugrakocabay/konsume/pkg/config"
 	"github.com/bugrakocabay/konsume/pkg/queue"
+	"github.com/bugrakocabay/konsume/pkg/queue/activemq"
 	"github.com/bugrakocabay/konsume/pkg/queue/kafka"
 	"github.com/bugrakocabay/konsume/pkg/queue/rabbitmq"
 	"github.com/bugrakocabay/konsume/pkg/runner"
@@ -41,6 +42,10 @@ func Execute() {
 			providerMap[provider.Name] = provider
 		case common.QueueSourceKafka:
 			consumer := kafka.NewConsumer(provider.KafkaConfig)
+			consumers[provider.Name] = consumer
+			providerMap[provider.Name] = provider
+		case common.QueueSourceActiveMQ:
+			consumer := activemq.NewConsumer(provider.StompMQConfig)
 			consumers[provider.Name] = consumer
 			providerMap[provider.Name] = provider
 		default:
