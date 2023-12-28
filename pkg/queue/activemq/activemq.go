@@ -24,7 +24,6 @@ func NewConsumer(cfg *config.StompConfig) *Consumer {
 }
 
 func (c *Consumer) Connect(ctx context.Context) error {
-	slog.Debug("Attempting to connect to ActiveMQ", "host", c.config.Host, "port", c.config.Port)
 	var err error
 	var options = []func(*stomp.Conn) error{
 		//set rw timeout to 2 hours
@@ -38,6 +37,7 @@ func (c *Consumer) Connect(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	slog.Info("Connected to ActiveMQ", "host", c.config.Host, "port", c.config.Port)
 	return nil
 }
 

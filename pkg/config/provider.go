@@ -22,11 +22,11 @@ var (
 	topicNotDefinedError       = errors.New("topic not defined")
 	groupNotDefinedError       = errors.New("group not defined")
 
-	activemqConfigNotDefinedError = errors.New("stomp config not defined")
-	stompHostNotDefinedError      = errors.New("stomp host not defined")
-	stompPortNotDefinedError      = errors.New("stomp port not defined")
-	stompUsernameNotDefinedError  = errors.New("stomp username not defined")
-	stompPasswordNotDefinedError  = errors.New("stomp password not defined")
+	stompConfigNotDefinedError   = errors.New("stomp config not defined")
+	stompHostNotDefinedError     = errors.New("stomp host not defined")
+	stompPortNotDefinedError     = errors.New("stomp port not defined")
+	stompUsernameNotDefinedError = errors.New("stomp username not defined")
+	stompPasswordNotDefinedError = errors.New("stomp password not defined")
 )
 
 // ProviderConfig is the main configuration information needed to connect to a provider
@@ -130,7 +130,7 @@ func (p *ProviderConfig) validateProvider() error {
 
 	if p.Type == common.QueueSourceActiveMQ {
 		if p.StompMQConfig == nil {
-			return activemqConfigNotDefinedError
+			return stompConfigNotDefinedError
 		}
 		err := p.StompMQConfig.validateStompConfig()
 		if err != nil {
@@ -193,7 +193,7 @@ func (s *StompConfig) validateStompConfig() error {
 	}
 
 	if len(s.Password) == 0 {
-		return stompHostNotDefinedError
+		return stompPasswordNotDefinedError
 	}
 	return nil
 }

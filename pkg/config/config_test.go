@@ -632,6 +632,112 @@ queues:
 			},
 			expectedError: nil,
 		},
+		{
+			name:       "should throw error if stomp provider config is not defined",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "activemq"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    routes:
+      - name: "test-route"
+        url: "http://localhost:8080"
+`,
+			},
+			expectedError: stompConfigNotDefinedError,
+		},
+		{
+			name:       "should throw error if stomp host is not defined",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "activemq"
+    stomp-config:
+      port: 61613
+      username: "user"
+      password: "password"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    routes:
+      - name: "test-route"
+        url: "http://localhost:8080"
+`,
+			},
+			expectedError: stompHostNotDefinedError,
+		},
+		{
+			name:       "should throw error if stomp port is not defined",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "activemq"
+    stomp-config:
+      host: "127.0.0.1"
+      username: "user"
+      password: "password"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    routes:
+      - name: "test-route"
+        url: "http://localhost:8080"
+`,
+			},
+			expectedError: stompPortNotDefinedError,
+		},
+		{
+			name:       "should throw error if stomp username is not defined",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "activemq"
+    stomp-config:
+      host: "127.0.0.1"
+      port: 61613
+      password: "password"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    routes:
+      - name: "test-route"
+        url: "http://localhost:8080"
+`,
+			},
+			expectedError: stompUsernameNotDefinedError,
+		},
+		{
+			name:       "should throw error if stomp password is not defined",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "activemq"
+    stomp-config:
+      host: "127.0.0.1"
+      port: 61613
+      username: "user"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    routes:
+      - name: "test-route"
+        url: "http://localhost:8080"
+`,
+			},
+			expectedError: stompPasswordNotDefinedError,
+		},
 	}
 
 	for _, tc := range tests {
