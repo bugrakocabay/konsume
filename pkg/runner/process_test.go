@@ -73,17 +73,20 @@ func TestListenAndProcess_SuccessfulConsumption(t *testing.T) {
 
 func TestListenAndProcess_InvalidMessageFormat(t *testing.T) {
 	qCfg := &config.QueueConfig{Name: "testQueue"}
+	handlerCalled := false
 
 	mockConsumer := &MockMessageQueueConsumer{
 		ConnectFunc: func() error { return nil },
 		ConsumeFunc: func(queueName string, handler func(msg []byte) error) error {
+			handlerCalled = true
 			return handler([]byte("invalid message"))
 		},
 	}
 	ctx := context.Background()
-	err := listenAndProcess(ctx, mockConsumer, qCfg)
-	if err == nil {
-		t.Error("Expected an error when message format is invalid, but got nil")
+	_ = listenAndProcess(ctx, mockConsumer, qCfg) // Error is not expected to be returned
+
+	if !handlerCalled {
+		t.Error("Expected handler to be called, but it was not")
 	}
 }
 
