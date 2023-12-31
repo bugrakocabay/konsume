@@ -16,6 +16,14 @@ providers:
         - "kafka:9092"
       topic: "your_topic_name"
       group: "group1"
+  - name: "active-queue"
+    type: "activemq"
+    retry: 5
+    activemq-config:
+      host: "activemq"
+      port: 61613
+      username: "user"
+      password: "password"
 
 queues:
   - name: "queue-for-rabbit"
@@ -63,3 +71,23 @@ queues:
               }
             }
         timeout: 10s
+  - name: "queue-for-activemq"
+    provider: "active-queue"
+    retry:
+      enabled: true
+      threshold_status: 400
+      max_retries: 2
+      interval: 5s
+      strategy: "fixed"
+    routes:
+      - name: "ServiceA_Queue3"
+        type: "REST"
+        method: "POST"
+        url: "https://someotherurl.com"
+        body:
+          key1: "{{hello}}"
+          custom: "a custom value"
+          int: 12345546856
+        timeout: 5s
+        query:
+          key1: "qwerty"

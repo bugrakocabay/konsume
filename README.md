@@ -31,6 +31,7 @@
 - [Usage](#usage)
 - [Configuration](#configuration)
 - [FAQ](#faq)
+- [Contributing](#contributing)
 
 ## Overview
 
@@ -46,6 +47,7 @@ komsume is a tool that easily connects message queues like RabbitMQ and Kafka wi
 - **Request Body Templating**: Dynamically constructs request bodies using templates with values extracted from incoming messages.
 - **Custom HTTP Headers**: Allows setting custom HTTP headers for outgoing requests.
 - **Configurable via YAML**: Easy configuration using a YAML file for defining queues, routes, and behaviors.
+- **Monitoring**: Provides a Prometheus endpoint for monitoring metrics.
 
 ## Installation
 
@@ -110,40 +112,45 @@ queues:
 
 ## Configuration
 
-| Parameter                        | Description                                                                                                    | Is Required?                        |
-|:---------------------------------|:---------------------------------------------------------------------------------------------------------------| :---------------------------------- |
-| `debug`                          | Enable debug logging level                                                                                     | no                                  |
-| `providers`                      | List of configuration for queue sources                                                                        | yes                                 |
-| `providers.name`                 | Name of the queue source                                                                                       | yes                                 |
-| `providers.type`                 | Type of the queue source. Supported types are `rabbitmq` and `kafka`                                           | yes                                 |
-| `providers.retry`                | Amount of times to retry connecting to queue source                                                            | no                                  |
-| `providers.amqp-config`          | Configuration for RabbitMQ                                                                                     | yes (if type is rabbitmq)           |
-| `providers.amqp-config.host`     | Host of the RabbitMQ server                                                                                    | yes (if type is rabbitmq)           |
-| `providers.amqp-config.port`     | Port of the RabbitMQ server                                                                                    | yes (if type is rabbitmq)           |
-| `providers.amqp-config.username` | Username for the RabbitMQ server                                                                               | yes (if type is rabbitmq)           |
-| `providers.amqp-config.password` | Password for the RabbitMQ server                                                                               | yes (if type is rabbitmq)           |
-| `providers.kafka-config`         | Configuration for Kafka                                                                                        | yes (if type is kafka)              |
-| `providers.kafka-config.brokers` | List of Kafka brokers                                                                                          | yes (if type is kafka)              |
-| `providers.kafka-config.topic`   | Topic name for Kafka                                                                                           | yes (if type is kafka)              |
-| `providers.kafka-config.group`   | Group name for Kafka                                                                                           | yes (if type is kafka)              |
-| `queues`                         | List of configuration for queues                                                                               | yes                                 |
-| `queues.name`                    | Name of the queue                                                                                              | yes                                 |
-| `queues.provider`                | Name of the queue source                                                                                       | yes (should match a provider name ) |
-| `queues.retry`                   | Retry mechanism for queue                                                                                      | no                                  |
-| `queues.retry.enabled`           | Flag for enabling/disabling retry mechanism                                                                    | yes (if retry is enabled)           |
-| `queues.retry.strategy`          | Type of the retry mechanism. Supported types are `fixed`, `expo`, and `random`                                 | no (defaults to fixed)              |
-| `queues.retry.max_retries`       | Maximum amount of times that retrying will be triggered                                                        | yes (if retry is enabled)           |
-| `queues.retry.interval`          | Amount of time between retries                                                                                 | yes (if retry is enabled)           |
-| `queues.retry.threshold_status`  | Minimum HTTP status code to trigger retry mechanism, any status code above or equal this will trigger retrying | no (defaults to 500)                |
-| `queues.routes`                  | List of configuration for routes                                                                               | yes                                 |
-| `queues.routes.name`             | Name of the route                                                                                              | yes                                 |
-| `queues.routes.type`             | Type of the route.                                                                                             | no (defaults to REST)               |
-| `queues.routes.method`           | HTTP method for the route                                                                                      | no (defaults to POST)               |
-| `queues.routes.url`              | URL for the route                                                                                              | yes                                 |
-| `queues.routes.headers`          | List of headers for the route                                                                                  | no                                  |
-| `queues.routes.body`             | List of key-values to customize body of the request                                                            | no                                  |
-| `queues.routes.query`            | List of key-values to customize query params of the request                                                    | no                                  |
-| `queues.routes.timeout`          | Timeout of the request                                                                                         | no (defaults to 10s)                |
+| Parameter                         | Description                                                                                                    | Is Required?                            |
+|:----------------------------------|:---------------------------------------------------------------------------------------------------------------|:----------------------------------------|
+| `debug`                           | Enable debug logging level                                                                                     | no                                      |
+| `providers`                       | List of configuration for queue sources                                                                        | yes                                     |
+| `providers.name`                  | Name of the queue source                                                                                       | yes                                     |
+| `providers.type`                  | Type of the queue source. Supported types are `rabbitmq`, `kafka` and `activemq`                               | yes                                     |
+| `providers.retry`                 | Amount of times to retry connecting to queue source                                                            | no                                      |
+| `providers.amqp-config`           | Configuration for RabbitMQ                                                                                     | yes (if type is rabbitmq)               |
+| `providers.amqp-config.host`      | Host of the RabbitMQ server                                                                                    | yes (if type is rabbitmq)               |
+| `providers.amqp-config.port`      | Port of the RabbitMQ server                                                                                    | yes (if type is rabbitmq)               |
+| `providers.amqp-config.username`  | Username for the RabbitMQ server                                                                               | yes (if type is rabbitmq)               |
+| `providers.amqp-config.password`  | Password for the RabbitMQ server                                                                               | yes (if type is rabbitmq)               |
+| `providers.kafka-config`          | Configuration for Kafka                                                                                        | yes (if type is kafka)                  |
+| `providers.kafka-config.brokers`  | List of Kafka brokers                                                                                          | yes (if type is kafka)                  |
+| `providers.kafka-config.topic`    | Topic name for Kafka                                                                                           | yes (if type is kafka)                  |
+| `providers.kafka-config.group`    | Group name for Kafka                                                                                           | yes (if type is kafka)                  |
+| `providers.stomp-config`          | Configuration for ActiveMQ                                                                                     | yes (if type is activemq)               |
+| `providers.stomp-config.host`     | Host of the ActiveMQ server                                                                                    | yes (if type is activemq)               |
+| `providers.stomp-config.port`     | Port of the ActiveMQ server                                                                                    | yes (if type is activemq)               |
+| `providers.stomp-config.username` | Username for the ActiveMQ server                                                                               | yes (if type is activemq)               |
+| `providers.stomp-config.password` | Password for the ActiveMQ server                                                                               | yes (if type is activemq)               |
+| `queues`                          | List of configuration for queues                                                                               | yes                                     |
+| `queues.name`                     | Name of the queue                                                                                              | yes                                     |
+| `queues.provider`                 | Name of the queue source                                                                                       | yes (should match a provider name )     |
+| `queues.retry`                    | Retry mechanism for queue                                                                                      | no                                      |
+| `queues.retry.enabled`            | Flag for enabling/disabling retry mechanism                                                                    | yes (if retry is enabled)               |
+| `queues.retry.strategy`           | Type of the retry mechanism. Supported types are `fixed`, `expo`, and `random`                                 | no (defaults to fixed)                  |
+| `queues.retry.max_retries`        | Maximum amount of times that retrying will be triggered                                                        | yes (if retry is enabled)               |
+| `queues.retry.interval`           | Amount of time between retries                                                                                 | yes (if retry is enabled)               |
+| `queues.retry.threshold_status`   | Minimum HTTP status code to trigger retry mechanism, any status code above or equal this will trigger retrying | no (defaults to 500)                    |
+| `queues.routes`                   | List of configuration for routes                                                                               | yes                                     |
+| `queues.routes.name`              | Name of the route                                                                                              | yes                                     |
+| `queues.routes.type`              | Type of the route.                                                                                             | no (defaults to REST)                   |
+| `queues.routes.method`            | HTTP method for the route                                                                                      | no (defaults to POST)                   |
+| `queues.routes.url`               | URL for the route                                                                                              | yes                                     |
+| `queues.routes.headers`           | List of headers for the route                                                                                  | no                                      |
+| `queues.routes.body`              | List of key-values to customize body of the request                                                            | no                                      |
+| `queues.routes.query`             | List of key-values to customize query params of the request                                                    | no                                      |
+| `queues.routes.timeout`           | Timeout of the request                                                                                         | no (defaults to 10s)                    |
 
 ## FAQ
 
@@ -156,12 +163,12 @@ Think of konsume as your handy tool for making message queues and web APIs work 
 
 <details>
 <summary> <b>What message queues does konsume support?</b> </summary>
-Currently konsume supports RabbitMQ and Kafka. But it is designed to be easily extensible to support other message queues.
+Currently konsume supports <b>RabbitMQ</b>, <b>Kafka</b> and <b>ActiveMQ</b>. But it is designed to be easily extensible to support other message queues.
 </details>
 
 <details>
 <summary> <b>How can I dynamically insert values from consumed messages into the request body?</b> </summary>
-konsume allows dynamically inserting values from consumed messages into the request body using placeholders. You can use the `{{key}}` syntax to insert values from consumed messages into the request body. For example, if you have a message like this:
+konsume allows dynamically inserting values from consumed messages into the request body using placeholders. You can use the <code>{{key}}</code> syntax to insert values from consumed messages into the request body. For example, if you have a message like this:
 
 ```json
 {
@@ -189,7 +196,7 @@ routes:
 
 <details>
 <summary> <b>Is GraphQL supported?</b> </summary>
-Yes! konsume supports GraphQL. You can use the `graphql` type for routes and define the GraphQL query or mutation in the `body` section of the route. Under `body` section, you can use the `query` or `mutation` key to define your GraphQL query or mutation. Also konsume allows dynamically inserting values from consumed messages into the GraphQL body using placeholders.
+Yes! konsume supports GraphQL. You can use the <code>graphql</code> type for routes and define the GraphQL query or mutation in the <code>body</code> section of the route. Under <code>body</code> section, you can use the <code>query</code> or <code>mutation</code> key to define your GraphQL query or mutation. Also konsume allows dynamically inserting values from consumed messages into the GraphQL body using placeholders.
 
 ```yaml
 routes:
@@ -214,7 +221,7 @@ routes:
 
 <details>
 <summary> <b>How does the retry mechanism work?</b> </summary>
-konsume supports three different retry strategies: `fixed`, `expo`, and `random`. You can define the retry strategy in the `retry` section of the queue configuration. If you want to enable retrying, you should set the `enabled` flag to `true`. You can also define the maximum amount of times that retrying will be triggered using the `max_retries` key. The `interval` key defines the amount of time between retries. The `threshold_status` key defines the minimum HTTP status code to trigger retry mechanism, any status code above or equal this will trigger retrying. If you don't define the `threshold_status` key, it will default to `500`.
+konsume supports three different retry strategies: <code>fixed</code>, <code>expo</code>, and <code>random</code>. You can define the retry strategy in the <code>retry</code> section of the queue configuration. If you want to enable retrying, you should set the <code>enabled</code> flag to <code>true</code>. You can also define the maximum amount of times that retrying will be triggered using the <code>max_retries</code> key. The <code>interval</code> key defines the amount of time between retries. The <code>threshold_status</code> key defines the minimum HTTP status code to trigger retry mechanism, any status code above or equal this will trigger retrying. If you don't define the <code>threshold_status</code> key, it will default to <code>500</code>.
 
 ```yaml
 queues:
@@ -232,6 +239,12 @@ queues:
         method: 'POST'
         url: 'https://someurl.com'
 ```
+
+</details>
+
+<details>
+<summary> <b>How to see the metrics?</b> </summary>
+konsume provides a Prometheus endpoint for monitoring metrics. You can see the metrics at <code>/metrics</code> by default. Here you will find a list of metrics that Prometheus can scrape by default.
 
 </details>
 
