@@ -3,9 +3,12 @@ package konsume
 import (
 	"log"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/bugrakocabay/konsume/pkg/common"
 	"github.com/bugrakocabay/konsume/pkg/config"
@@ -56,6 +59,11 @@ func Execute() {
 	if err = runner.StartConsumers(cfg, consumers, providerMap); err != nil {
 		log.Fatalf("Failed to start consumers: %s", err)
 	}
+
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		http.ListenAndServe(":8080", nil)
+	}()
 
 	signalChannel := setupSignalHandling()
 	waitForShutdown(signalChannel)
