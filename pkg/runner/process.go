@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"runtime"
 
 	"github.com/bugrakocabay/konsume/pkg/common"
 	"github.com/bugrakocabay/konsume/pkg/config"
@@ -15,30 +16,40 @@ import (
 
 // listenAndProcess listens the queue and processes the messages
 func listenAndProcess(ctx context.Context, consumer queue.MessageQueueConsumer, qCfg *config.QueueConfig) error {
+	semaphore := make(chan struct{}, runtime.NumCPU()*2)
+
 	return consumer.Consume(ctx, qCfg.Name, func(msg []byte) error {
 		slog.Info("Received a message", "queue", qCfg.Name, "message", string(msg))
-
-		messageData, err := util.ParseJSONToMap(msg)
-		if err != nil {
-			return err
-		}
-
-		for _, rCfg := range qCfg.Routes {
-			var body []byte
-
-			if len(rCfg.Body) > 0 {
-				body, err = prepareRequestBody(rCfg, messageData)
-				if err != nil {
-					slog.Error("Failed to prepare request body", "error", err)
-					continue
+		semaphore <- struct{}{}
+		go func(msg []byte) {
+			defer func() {
+				<-semaphore
+				if r := recover(); r != nil {
+					slog.Error("Recovered from panic in message processing", "error", r)
 				}
-			} else {
-				body = msg
+			}()
+			messageData, err := util.ParseJSONToMap(msg)
+			if err != nil {
+				slog.Error("Failed to parse message", "error", err)
+				return
 			}
-			rCfg.URL = appendQueryParams(rCfg.URL, rCfg.Query)
-			rqstr := requester.NewRequester(rCfg.URL, rCfg.Method, body, rCfg.Headers)
-			sendRequestWithStrategy(qCfg, rCfg, rqstr)
-		}
+			for _, rCfg := range qCfg.Routes {
+				var body []byte
+
+				if len(rCfg.Body) > 0 {
+					body, err = prepareRequestBody(rCfg, messageData)
+					if err != nil {
+						slog.Error("Failed to prepare request body", "error", err)
+						continue
+					}
+				} else {
+					body = msg
+				}
+				rCfg.URL = appendQueryParams(rCfg.URL, rCfg.Query)
+				rqstr := requester.NewRequester(rCfg.URL, rCfg.Method, body, rCfg.Headers)
+				sendRequestWithStrategy(qCfg, rCfg, rqstr)
+			}
+		}(msg)
 		return nil
 	})
 }
