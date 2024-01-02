@@ -26,12 +26,16 @@ type Config struct {
 
 	// Debug is a flag that enables debug logging
 	Debug bool `yaml:"debug"`
+
+	// Metrics is the configuration for the metrics endpoint
+	Metrics *MetricsConfig `yaml:"metrics"`
 }
 
 // LoadConfig loads the configuration from the config.yaml file
 func LoadConfig() (*Config, error) {
 	configPath := os.Getenv("KONSUME_CONFIG_PATH")
 	if len(configPath) == 0 {
+		slog.Debug("No configuration path defined, using default path /config/config.yaml")
 		configPath = "/config/config.yaml"
 	}
 	slog.Info("Loading configuration from", "path", configPath)
@@ -79,6 +83,13 @@ func (c *Config) ValidateAll() error {
 
 	for _, q := range c.Queues {
 		err := q.validateQueue(c.Providers)
+		if err != nil {
+			return err
+		}
+	}
+
+	if c.Metrics != nil {
+		err := c.Metrics.validateMetrics()
 		if err != nil {
 			return err
 		}
