@@ -5,6 +5,8 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+
+	"github.com/bugrakocabay/konsume/pkg/metrics"
 )
 
 // HTTPRequester is an interface for sending HTTP requests, useful for mocking in tests
@@ -60,5 +62,11 @@ func (r *Requester) SendRequest() (*http.Response, error) {
 	}
 	defer resp.Body.Close()
 
+	metrics.HttpRequestsMade.Inc()
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		metrics.HttpRequestsSucceeded.Inc()
+	} else {
+		metrics.HttpRequestsFailed.Inc()
+	}
 	return resp, nil
 }

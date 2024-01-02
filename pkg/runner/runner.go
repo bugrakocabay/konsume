@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"fmt"
+	"github.com/bugrakocabay/konsume/pkg/metrics"
 	"log"
 	"log/slog"
 	"math/rand"
@@ -80,6 +81,7 @@ func sendRequestWithStrategy(qCfg *config.QueueConfig, rCfg *config.RouteConfig,
 			slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode)
 		}
 	}
+	metrics.MessagesConsumed.Inc()
 }
 
 // shouldRetry determines whether a request should be retried based on the response and retry configuration
