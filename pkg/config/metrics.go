@@ -19,6 +19,9 @@ type MetricsConfig struct {
 
 	// Path is the path that the metrics endpoint will listen on
 	Path string `yaml:"path,omitempty"`
+
+	// ThresholdStatus is the minimum status code that will increase failure count, defaults to 500
+	ThresholdStatus int `yaml:"threshold_status,omitempty"`
 }
 
 // ValidateAll validates the configuration and returns default values if necessary
@@ -39,6 +42,10 @@ func (c *MetricsConfig) validateMetrics() error {
 	}
 	if c.Path[0] != '/' {
 		c.Path = "/" + c.Path
+	}
+	if c.ThresholdStatus == 0 {
+		slog.Debug("No threshold status defined for metrics endpoint, using default status 500")
+		c.ThresholdStatus = 500
 	}
 	return nil
 }
