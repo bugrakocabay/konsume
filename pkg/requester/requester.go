@@ -5,11 +5,14 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+
+	"github.com/bugrakocabay/konsume/pkg/config"
+	"github.com/bugrakocabay/konsume/pkg/metrics"
 )
 
 // HTTPRequester is an interface for sending HTTP requests, useful for mocking in tests
 type HTTPRequester interface {
-	SendRequest() (*http.Response, error)
+	SendRequest(m *config.MetricsConfig) (*http.Response, error)
 }
 
 // Requester is the struct that contains the request information.
@@ -31,7 +34,7 @@ func NewRequester(endpoint, method string, body []byte, headers map[string]strin
 }
 
 // SendRequest sends the request to the given endpoint.
-func (r *Requester) SendRequest() (*http.Response, error) {
+func (r *Requester) SendRequest(m *config.MetricsConfig) (*http.Response, error) {
 	var (
 		resp *http.Response
 		err  error
@@ -60,5 +63,13 @@ func (r *Requester) SendRequest() (*http.Response, error) {
 	}
 	defer resp.Body.Close()
 
+	if m.Enabled {
+		metrics.HttpRequestsMade.Inc()
+		if resp.StatusCode >= m.ThresholdStatus {
+			metrics.HttpRequestsFailed.Inc()
+		} else {
+			metrics.HttpRequestsSucceeded.Inc()
+		}
+	}
 	return resp, nil
 }
