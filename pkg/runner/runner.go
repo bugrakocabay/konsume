@@ -3,7 +3,6 @@ package runner
 import (
 	"context"
 	"fmt"
-	"github.com/bugrakocabay/konsume/pkg/metrics"
 	"log"
 	"log/slog"
 	"math/rand"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/bugrakocabay/konsume/pkg/common"
 	"github.com/bugrakocabay/konsume/pkg/config"
+	"github.com/bugrakocabay/konsume/pkg/metrics"
 	"github.com/bugrakocabay/konsume/pkg/queue"
 	"github.com/bugrakocabay/konsume/pkg/requester"
 )
@@ -40,7 +40,7 @@ func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueC
 			if err := connectWithRetry(ctx, c, pc); err != nil {
 				return
 			}
-			if err := listenAndProcess(ctx, c, qc); err != nil {
+			if err := listenAndProcess(ctx, c, qc, cfg.Metrics); err != nil {
 				log.Printf("Failed to start consumer for queue %s: %s", qc.Name, err)
 			}
 		}(consumer, qCfg, providerCfg)
@@ -72,10 +72,15 @@ func connectWithRetry(ctx context.Context, consumer queue.MessageQueueConsumer, 
 }
 
 // sendRequestWithStrategy attempts to send an HTTP request and retries based on the provided configuration
-func sendRequestWithStrategy(qCfg *config.QueueConfig, rCfg *config.RouteConfig, requester requester.HTTPRequester) {
-	resp, err := requester.SendRequest()
+func sendRequestWithStrategy(qCfg *config.QueueConfig, rCfg *config.RouteConfig, mCfg *config.MetricsConfig, requester requester.HTTPRequester) {
+	resp, err := requester.SendRequest(mCfg)
 	if err != nil || shouldRetry(resp, qCfg.Retry) {
-		retryRequest(qCfg, rCfg, requester)
+		if resp != nil && resp.StatusCode != 0 {
+			slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode)
+		} else {
+			slog.Error("Failed to send request", "route", rCfg.Name, "error", err)
+		}
+		retryRequest(qCfg, rCfg, mCfg, requester)
 	} else {
 		if resp != nil {
 			slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode)
@@ -86,17 +91,18 @@ func sendRequestWithStrategy(qCfg *config.QueueConfig, rCfg *config.RouteConfig,
 
 // shouldRetry determines whether a request should be retried based on the response and retry configuration
 func shouldRetry(resp *http.Response, retryConfig *config.RetryConfig) bool {
-	if retryConfig == nil {
+	if retryConfig == nil && !retryConfig.Enabled {
 		return false
 	}
 	return resp == nil || resp.StatusCode >= retryConfig.ThresholdStatus
 }
 
 // retryRequest handles the retry logic for a request, attempting retries as configured
-func retryRequest(qCfg *config.QueueConfig, rCfg *config.RouteConfig, requester requester.HTTPRequester) {
+func retryRequest(qCfg *config.QueueConfig, rCfg *config.RouteConfig, mCfg *config.MetricsConfig, requester requester.HTTPRequester) {
 	for i := 1; i <= qCfg.Retry.MaxRetries; i++ {
+		slog.Info("Retrying request", "route", rCfg.Name, "retry", i)
 		time.Sleep(calculateRetryInterval(qCfg.Retry, i))
-		resp, err := requester.SendRequest()
+		resp, err := requester.SendRequest(mCfg)
 		if err == nil && !shouldRetry(resp, qCfg.Retry) {
 			if resp != nil {
 				slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode)

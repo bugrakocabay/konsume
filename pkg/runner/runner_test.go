@@ -22,7 +22,7 @@ type MockHTTPRequester struct {
 	CallCount    int
 }
 
-func (m *MockHTTPRequester) SendRequest() (*http.Response, error) {
+func (m *MockHTTPRequester) SendRequest(mCfg *config.MetricsConfig) (*http.Response, error) {
 	m.CallCount++
 
 	if m.MockError != nil {
@@ -311,7 +311,7 @@ func TestSendRequestWithStrategy(t *testing.T) {
 				},
 			}
 			startTime := time.Now()
-			sendRequestWithStrategy(qCfg, tt.route, mockHTTPRequester)
+			sendRequestWithStrategy(qCfg, tt.route, nil, mockHTTPRequester)
 			duration := time.Since(startTime)
 
 			if mockHTTPRequester.CallCount != tt.expectedCalls {

@@ -15,7 +15,7 @@ import (
 )
 
 // listenAndProcess listens the queue and processes the messages
-func listenAndProcess(ctx context.Context, consumer queue.MessageQueueConsumer, qCfg *config.QueueConfig) error {
+func listenAndProcess(ctx context.Context, consumer queue.MessageQueueConsumer, qCfg *config.QueueConfig, mCfg *config.MetricsConfig) error {
 	semaphore := make(chan struct{}, runtime.NumCPU()*2)
 
 	return consumer.Consume(ctx, qCfg.Name, func(msg []byte) error {
@@ -47,7 +47,7 @@ func listenAndProcess(ctx context.Context, consumer queue.MessageQueueConsumer, 
 				}
 				rCfg.URL = appendQueryParams(rCfg.URL, rCfg.Query)
 				rqstr := requester.NewRequester(rCfg.URL, rCfg.Method, body, rCfg.Headers)
-				sendRequestWithStrategy(qCfg, rCfg, rqstr)
+				sendRequestWithStrategy(qCfg, rCfg, mCfg, rqstr)
 			}
 		}(msg)
 		return nil
