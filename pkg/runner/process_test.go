@@ -97,9 +97,9 @@ func TestListenAndProcess_RouteHandling(t *testing.T) {
 			return handler([]byte("{\"key\":\"value\"}"))
 		},
 	}
-	qCfg := &config.QueueConfig{Name: "testQueue"}
 
-	qCfg.Routes = []*config.RouteConfig{
+	qCfg1 := &config.QueueConfig{Name: "testQueue"}
+	qCfg1.Routes = []*config.RouteConfig{
 		{
 			Body:   map[string]interface{}{"key": "value"},
 			Method: "GET",
@@ -107,12 +107,13 @@ func TestListenAndProcess_RouteHandling(t *testing.T) {
 			Query:  map[string]string{"param": "value"},
 		},
 	}
-	err := listenAndProcess(ctx, mockConsumer, qCfg, nil)
+	err := listenAndProcess(ctx, mockConsumer, qCfg1, nil)
 	if err != nil {
 		t.Errorf("listenAndProcess() with non-empty body returned error: %v", err)
 	}
 
-	qCfg.Routes = []*config.RouteConfig{
+	qCfg2 := &config.QueueConfig{Name: "testQueue"}
+	qCfg2.Routes = []*config.RouteConfig{
 		{
 			Body:   nil,
 			Method: "GET",
@@ -120,7 +121,7 @@ func TestListenAndProcess_RouteHandling(t *testing.T) {
 			Query:  map[string]string{"param": "value"},
 		},
 	}
-	err = listenAndProcess(ctx, mockConsumer, qCfg, nil)
+	err = listenAndProcess(ctx, mockConsumer, qCfg2, nil)
 	if err != nil {
 		t.Errorf("listenAndProcess() with empty body returned error: %v", err)
 	}
