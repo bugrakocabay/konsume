@@ -1,12 +1,17 @@
 package config
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
+	"time"
+
+	"github.com/bugrakocabay/konsume/pkg/common"
 )
 
 func TestLoadConfig(t *testing.T) {
@@ -18,6 +23,7 @@ func TestLoadConfig(t *testing.T) {
 		configPath     string
 		pathAndContent map[string]string
 		expectedError  error
+		expectedConfig *Config
 	}{
 		{
 			name:           "should throw error if config file is not found",
@@ -610,7 +616,210 @@ queues:
 			expectedError: invalidStrategyError,
 		},
 		{
-			name:       "should load config file successfully",
+			name:       "should return fixed strategy if strategy is not defined for queue retry config",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    retry:
+      enabled: true
+      max_retries: 2
+      interval: 1s
+      threshold_status: 500
+    routes:
+      - name: "test-route"
+        url: "http://localhost:8080"
+        method: "POST"
+        type: "REST"
+        timeout: 3s
+`,
+			},
+			expectedError: nil,
+			expectedConfig: &Config{
+				Providers: []*ProviderConfig{
+					{
+						Name: "test-queue",
+						Type: "rabbitmq",
+						AMQPConfig: &AMQPConfig{
+							Host:     "rabbitmq",
+							Port:     5672,
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+				Queues: []*QueueConfig{
+					{
+						Name:     "test",
+						Provider: "test-queue",
+						Retry: &RetryConfig{
+							Enabled:         true,
+							MaxRetries:      2,
+							Interval:        1 * time.Second,
+							Strategy:        common.RetryStrategyFixed,
+							ThresholdStatus: 500,
+						},
+						Routes: []*RouteConfig{
+							{
+								Name:    "test-route",
+								URL:     "http://localhost:8080",
+								Method:  "POST",
+								Type:    common.RouteTypeREST,
+								Timeout: 3 * time.Second,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:       "should return default threshold status if threshold status is not defined for queue retry config",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    retry:
+      enabled: true
+      max_retries: 2
+      interval: 1s
+    routes:
+      - name: "test-route"
+        url: "http://localhost:8080"
+        method: "POST"
+        type: "REST"
+        timeout: 3s
+`,
+			},
+			expectedError: nil,
+			expectedConfig: &Config{
+				Providers: []*ProviderConfig{
+					{
+						Name: "test-queue",
+						Type: "rabbitmq",
+						AMQPConfig: &AMQPConfig{
+							Host:     "rabbitmq",
+							Port:     5672,
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+				Queues: []*QueueConfig{
+					{
+						Name:     "test",
+						Provider: "test-queue",
+						Retry: &RetryConfig{
+							Enabled:         true,
+							MaxRetries:      2,
+							Interval:        1 * time.Second,
+							Strategy:        common.RetryStrategyFixed,
+							ThresholdStatus: 500,
+						},
+						Routes: []*RouteConfig{
+							{
+								Name:    "test-route",
+								URL:     "http://localhost:8080",
+								Method:  "POST",
+								Type:    common.RouteTypeREST,
+								Timeout: 3 * time.Second,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:       "should return POST method when route type is GraphQL and method is not defined for queue route config",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    retry:
+      enabled: true
+      max_retries: 2
+      interval: 1s
+    routes:
+      - name: "test-route"
+        url: "http://localhost:8080"
+        type: "graphql"
+        timeout: 3s
+        body:
+          query: "query { test }"
+`,
+			},
+			expectedError: nil,
+			expectedConfig: &Config{
+				Providers: []*ProviderConfig{
+					{
+						Name: "test-queue",
+						Type: "rabbitmq",
+						AMQPConfig: &AMQPConfig{
+							Host:     "rabbitmq",
+							Port:     5672,
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+				Queues: []*QueueConfig{
+					{
+						Name:     "test",
+						Provider: "test-queue",
+						Retry: &RetryConfig{
+							Enabled:         true,
+							MaxRetries:      2,
+							Interval:        1 * time.Second,
+							Strategy:        common.RetryStrategyFixed,
+							ThresholdStatus: 500,
+						},
+						Routes: []*RouteConfig{
+							{
+								Name:    "test-route",
+								URL:     "http://localhost:8080",
+								Method:  "POST",
+								Type:    common.RouteTypeGraphQL,
+								Timeout: 3 * time.Second,
+								Body: map[string]interface{}{
+									"query": "query { test }",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:       "should load config file successfully with amqp provider config",
 			configPath: "./config.yaml",
 			pathAndContent: map[string]string{
 				"config.yaml": `
@@ -628,9 +837,150 @@ queues:
     routes:
       - name: "test-route"
         url: "http://localhost:8080"
+        method: "POST"
+        type: "REST"
+        timeout: 3s
 `,
 			},
 			expectedError: nil,
+			expectedConfig: &Config{
+				Providers: []*ProviderConfig{
+					{
+						Name: "test-queue",
+						Type: common.QueueSourceRabbitMQ,
+						AMQPConfig: &AMQPConfig{
+							Host:     "rabbitmq",
+							Port:     5672,
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+				Queues: []*QueueConfig{
+					{
+						Name:     "test",
+						Provider: "test-queue",
+						Routes: []*RouteConfig{
+							{
+								Name:    "test-route",
+								URL:     "http://localhost:8080",
+								Method:  "POST",
+								Type:    common.RouteTypeREST,
+								Timeout: 3 * time.Second,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:       "should load config file successfully with kafka provider config",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "kafka"
+    kafka-config:
+      brokers:
+        - "kafka:9092"
+      topic: "group1"
+      group: "group1"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    routes:
+      - name: "test-route"
+        url: "http://localhost:8080"
+        method: "POST"
+        type: "REST"
+        timeout: 3s
+`,
+			},
+			expectedError: nil,
+			expectedConfig: &Config{
+				Providers: []*ProviderConfig{
+					{
+						Name: "test-queue",
+						Type: common.QueueSourceKafka,
+						KafkaConfig: &KafkaConfig{
+							Brokers: []string{"kafka:9092"},
+							Topic:   "group1",
+							Group:   "group1",
+						},
+					},
+				},
+				Queues: []*QueueConfig{
+					{
+						Name:     "test",
+						Provider: "test-queue",
+						Routes: []*RouteConfig{
+							{
+								Name:    "test-route",
+								URL:     "http://localhost:8080",
+								Method:  "POST",
+								Type:    common.RouteTypeREST,
+								Timeout: 3 * time.Second,
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name:       "should load config file successfully with stomp provider config",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "activemq"
+    stomp-config:
+      host: "activemq"
+      port: 61613
+      username: "user"
+      password: "password"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    routes:
+      - name: "test-route"
+        url: "http://localhost:8080"
+        method: "POST"
+        type: "REST"
+        timeout: 3s
+`,
+			},
+			expectedError: nil,
+			expectedConfig: &Config{
+				Providers: []*ProviderConfig{
+					{
+						Name: "test-queue",
+						Type: common.QueueSourceActiveMQ,
+						StompMQConfig: &StompConfig{
+							Host:     "activemq",
+							Port:     61613,
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+				Queues: []*QueueConfig{
+					{
+						Name:     "test",
+						Provider: "test-queue",
+						Routes: []*RouteConfig{
+							{
+								Name:    "test-route",
+								URL:     "http://localhost:8080",
+								Method:  "POST",
+								Type:    common.RouteTypeREST,
+								Timeout: 3 * time.Second,
+							},
+						},
+					},
+				},
+			},
 		},
 		{
 			name:       "should throw error if stomp provider config is not defined",
@@ -764,13 +1114,76 @@ metrics:
 			},
 			expectedError: invalidMetricsPortError,
 		},
+		{
+			name:       "should return default metrics configurations if metrics are enabled but configurations are not defined",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+metrics:
+  enabled: true
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    routes:
+      - name: "test-route"
+        url: "http://localhost:8080"
+        method: "POST"
+        type: "REST"
+        timeout: 3s
+`,
+			},
+			expectedError: nil,
+			expectedConfig: &Config{
+				Metrics: &MetricsConfig{
+					Enabled:         true,
+					Port:            8080,
+					Path:            "/metrics",
+					ThresholdStatus: 500,
+				},
+				Providers: []*ProviderConfig{
+					{
+						Name: "test-queue",
+						Type: common.QueueSourceRabbitMQ,
+						AMQPConfig: &AMQPConfig{
+							Host:     "rabbitmq",
+							Port:     5672,
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+				Queues: []*QueueConfig{
+					{
+						Name:     "test",
+						Provider: "test-queue",
+						Routes: []*RouteConfig{
+							{
+								Name:    "test-route",
+								URL:     "http://localhost:8080",
+								Method:  "POST",
+								Type:    common.RouteTypeREST,
+								Timeout: 3 * time.Second,
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			configFile := filepath.Join(dir, "config.yaml")
 			if len(tc.configPath) == 0 {
-				os.Remove(configFile) // Ensure the file does not exist for the test
+				os.Remove(configFile)
 			} else {
 				for path, content := range tc.pathAndContent {
 					err := os.WriteFile(filepath.Join(dir, path), []byte(content), 0644)
@@ -781,9 +1194,16 @@ metrics:
 			}
 
 			os.Setenv("KONSUME_CONFIG_PATH", configFile)
-			_, err := LoadConfig()
+			cfg, err := LoadConfig()
 			if !errors.Is(err, tc.expectedError) {
 				t.Errorf("expected error %v, got %v", tc.expectedError, err)
+			}
+			if tc.expectedError == nil {
+				if !reflect.DeepEqual(cfg, tc.expectedConfig) {
+					expectedBytes, _ := json.MarshalIndent(tc.expectedConfig, "", "  ")
+					actualBytes, _ := json.MarshalIndent(cfg, "", "  ")
+					t.Errorf("expected config %v, got %v", string(expectedBytes), string(actualBytes))
+				}
 			}
 		})
 	}
