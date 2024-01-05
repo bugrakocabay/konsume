@@ -90,6 +90,67 @@ func TestListenAndProcess_InvalidMessageFormat(t *testing.T) {
 	}
 }
 
+func TestListenAndProcess_RouteHandling(t *testing.T) {
+	ctx := context.Background()
+	mockConsumer := &MockMessageQueueConsumer{
+		ConsumeFunc: func(queueName string, handler func(msg []byte) error) error {
+			return handler([]byte("{\"key\":\"value\"}"))
+		},
+	}
+	qCfg := &config.QueueConfig{Name: "testQueue"}
+
+	qCfg.Routes = []*config.RouteConfig{
+		{
+			Body:   map[string]interface{}{"key": "value"},
+			Method: "GET",
+			URL:    "http://localhost/test",
+			Query:  map[string]string{"param": "value"},
+		},
+	}
+	err := listenAndProcess(ctx, mockConsumer, qCfg, nil)
+	if err != nil {
+		t.Errorf("listenAndProcess() with non-empty body returned error: %v", err)
+	}
+
+	qCfg.Routes = []*config.RouteConfig{
+		{
+			Body:   nil,
+			Method: "GET",
+			URL:    "http://localhost/test",
+			Query:  map[string]string{"param": "value"},
+		},
+	}
+	err = listenAndProcess(ctx, mockConsumer, qCfg, nil)
+	if err != nil {
+		t.Errorf("listenAndProcess() with empty body returned error: %v", err)
+	}
+}
+
+func TestListenAndProcess_PrepareRequestBody_Success(t *testing.T) {
+	ctx := context.Background()
+	qCfg := &config.QueueConfig{
+		Name: "testQueue",
+		Routes: []*config.RouteConfig{
+			{
+				Body:   map[string]interface{}{"key": "value"},
+				Method: "GET",
+				URL:    "http://localhost/test",
+			},
+		},
+	}
+
+	mockConsumer := &MockMessageQueueConsumer{
+		ConsumeFunc: func(queueName string, handler func(msg []byte) error) error {
+			return handler([]byte("{\"key\":\"value\"}"))
+		},
+	}
+
+	err := listenAndProcess(ctx, mockConsumer, qCfg, nil)
+	if err != nil {
+		t.Errorf("listenAndProcess() with valid body returned error: %v", err)
+	}
+}
+
 func TestPrepareRequestBody(t *testing.T) {
 	messageData := map[string]interface{}{"key1": "value1"}
 
@@ -147,5 +208,15 @@ func TestAppendQueryParams(t *testing.T) {
 	urlWithQueryParams := appendQueryParams(url, queryParams)
 	if strings.Contains(urlWithQueryParams, "key1=value1") == false || strings.Contains(urlWithQueryParams, "key2=value2") == false {
 		t.Errorf("appendQueryParams failed, urlWithQueryParams does not contain queryParams")
+	}
+}
+
+func TestAppendQueryParams_EmptyQueryParams(t *testing.T) {
+	url := "http://localhost:8080"
+	queryParams := map[string]string{}
+
+	urlWithQueryParams := appendQueryParams(url, queryParams)
+	if urlWithQueryParams != url {
+		t.Errorf("appendQueryParams failed, urlWithQueryParams should be equal to url")
 	}
 }

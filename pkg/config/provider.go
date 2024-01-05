@@ -195,5 +195,6 @@ func (s *StompConfig) validateStompConfig() error {
 	if len(s.Password) == 0 {
 		return stompPasswordNotDefinedError
 	}
+
 	return nil
 }

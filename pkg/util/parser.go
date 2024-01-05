@@ -11,9 +11,3 @@ func ParseJSONToMap(msg []byte) (map[string]interface{}, error) {
 	}
 	return messageData, nil
 }
-
-// JSONToStr converts a map to a JSON string
-func JSONToStr(m map[string]interface{}) string {
-	b, _ := json.Marshal(m)
-	return string(b)
-}

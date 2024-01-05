@@ -40,7 +40,6 @@ func LoadConfig() (*Config, error) {
 	}
 	slog.Info("Loading configuration from", "path", configPath)
 
-	// Read the yaml configuration file and unmarshal it into the Config struct
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -56,7 +55,6 @@ func LoadConfig() (*Config, error) {
 	}
 	slog.Debug("Loaded configuration successfully")
 
-	// Validate the configuration
 	err = cfg.ValidateAll()
 	if err != nil {
 		return nil, err
