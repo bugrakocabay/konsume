@@ -3,15 +3,13 @@ package konsume
 import (
 	"log"
 	"log/slog"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-
 	"github.com/bugrakocabay/konsume/pkg/common"
 	"github.com/bugrakocabay/konsume/pkg/config"
+	"github.com/bugrakocabay/konsume/pkg/metrics"
 	"github.com/bugrakocabay/konsume/pkg/queue"
 	"github.com/bugrakocabay/konsume/pkg/queue/activemq"
 	"github.com/bugrakocabay/konsume/pkg/queue/kafka"
@@ -26,7 +24,7 @@ func Execute() {
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		panic(err)
+		log.Fatalf("Failed to load configuration: %s", err)
 	}
 	if cfg.Debug {
 		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
@@ -36,6 +34,24 @@ func Execute() {
 
 	consumers := make(map[string]queue.MessageQueueConsumer)
 	providerMap := make(map[string]*config.ProviderConfig)
+
+	initProviders(cfg, consumers, providerMap)
+	if cfg.Metrics != nil && cfg.Metrics.Enabled {
+		metrics.InitMetrics(cfg.Metrics)
+	}
+
+	if err = runner.StartConsumers(cfg, consumers, providerMap); err != nil {
+		log.Fatalf("Failed to start consumers: %s", err)
+	}
+
+	signalChannel := setupSignalHandling()
+	waitForShutdown(signalChannel)
+
+	slog.Info("Shut down gracefully")
+}
+
+// initProviders initializes the consumers for each provider
+func initProviders(cfg *config.Config, consumers map[string]queue.MessageQueueConsumer, providerMap map[string]*config.ProviderConfig) {
 	for _, provider := range cfg.Providers {
 		slog.Debug("Initializing provider", "provider", provider.Name, "type", provider.Type)
 		switch provider.Type {
@@ -55,20 +71,6 @@ func Execute() {
 			log.Fatalf("Unknown queue source: %s", provider.Type)
 		}
 	}
-
-	if err = runner.StartConsumers(cfg, consumers, providerMap); err != nil {
-		log.Fatalf("Failed to start consumers: %s", err)
-	}
-
-	go func() {
-		http.Handle("/metrics", promhttp.Handler())
-		http.ListenAndServe(":8080", nil)
-	}()
-
-	signalChannel := setupSignalHandling()
-	waitForShutdown(signalChannel)
-
-	slog.Info("Shut down gracefully")
 }
 
 // setupSignalHandling configures the signal handling for os.Interrupt and syscall.SIGTERM.

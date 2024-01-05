@@ -738,6 +738,32 @@ queues:
 			},
 			expectedError: stompPasswordNotDefinedError,
 		},
+		{
+			name:       "should throw error metrics are enabled but invalid port is defined",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    routes:
+      - name: "test-route"
+        url: "http://localhost:8080"
+metrics:
+  enabled: true
+  port: 65536
+`,
+			},
+			expectedError: invalidMetricsPortError,
+		},
 	}
 
 	for _, tc := range tests {

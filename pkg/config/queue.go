@@ -111,6 +111,7 @@ func (queue *QueueConfig) validateQueue(providers []*ProviderConfig) error {
 			return intervalNotDefinedError
 		}
 		if queue.Retry.Strategy == "" {
+			slog.Debug("Retry strategy not defined, using default strategy fixed", "queue", queue.Name)
 			queue.Retry.Strategy = "fixed"
 		}
 		if queue.Retry.Strategy != common.RetryStrategyFixed &&
@@ -119,6 +120,7 @@ func (queue *QueueConfig) validateQueue(providers []*ProviderConfig) error {
 			return invalidStrategyError
 		}
 		if queue.Retry.ThresholdStatus == 0 {
+			slog.Debug("Threshold status not defined, using default status 500", "queue", queue.Name)
 			queue.Retry.ThresholdStatus = 500
 		}
 	}
@@ -134,9 +136,11 @@ func (queue *QueueConfig) validateQueue(providers []*ProviderConfig) error {
 				return urlNotDefinedError
 			}
 			if route.Method == "" {
+				slog.Debug("Route method not defined, using default method POST", "route", route.Name)
 				route.Method = "POST"
 			}
 			if route.Type == "" {
+				slog.Debug("Route type not defined, using default type REST", "route", route.Name)
 				route.Type = common.RouteTypeREST
 			}
 			if route.Type == common.RouteTypeGraphQL {
@@ -165,6 +169,7 @@ func (queue *QueueConfig) validateQueue(providers []*ProviderConfig) error {
 				}
 			}
 			if route.Timeout == 0 {
+				slog.Debug("Route timeout not defined, using default timeout 10 seconds", "route", route.Name)
 				route.Timeout = 10 * time.Second
 			}
 		}

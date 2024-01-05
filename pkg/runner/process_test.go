@@ -17,7 +17,7 @@ func TestListenAndProcess(t *testing.T) {
 		ConsumeFunc: func(queueName string, handler func(msg []byte) error) error { return nil },
 	}
 	ctx := context.Background()
-	err := listenAndProcess(ctx, mockConsumer, qCfg)
+	err := listenAndProcess(ctx, mockConsumer, qCfg, nil)
 	if err != nil {
 		t.Errorf("listenAndProcess() error = %v, wantErr %v", err, nil)
 	}
@@ -33,7 +33,7 @@ func TestListenAndProcess_ConnectFails(t *testing.T) {
 		ConnectFunc: func() error { return errors.New("connection failed") },
 	}
 	ctx := context.Background()
-	err := listenAndProcess(ctx, mockConsumer, qCfg)
+	err := listenAndProcess(ctx, mockConsumer, qCfg, nil)
 	if err == nil {
 		t.Error("Expected an error when connection fails, but got nil")
 	}
@@ -49,7 +49,7 @@ func TestListenAndProcess_ConsumptionFails(t *testing.T) {
 		},
 	}
 	ctx := context.Background()
-	err := listenAndProcess(ctx, mockConsumer, qCfg)
+	err := listenAndProcess(ctx, mockConsumer, qCfg, nil)
 	if err == nil {
 		t.Error("Expected an error when consumption fails, but got nil")
 	}
@@ -65,7 +65,7 @@ func TestListenAndProcess_SuccessfulConsumption(t *testing.T) {
 		},
 	}
 	ctx := context.Background()
-	err := listenAndProcess(ctx, mockConsumer, qCfg)
+	err := listenAndProcess(ctx, mockConsumer, qCfg, nil)
 	if err != nil {
 		t.Errorf("Expected no error, but got: %v", err)
 	}
@@ -83,7 +83,7 @@ func TestListenAndProcess_InvalidMessageFormat(t *testing.T) {
 		},
 	}
 	ctx := context.Background()
-	_ = listenAndProcess(ctx, mockConsumer, qCfg) // Error is not expected to be returned
+	_ = listenAndProcess(ctx, mockConsumer, qCfg, nil) // Error is not expected to be returned
 
 	if !handlerCalled {
 		t.Error("Expected handler to be called, but it was not")
