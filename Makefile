@@ -12,7 +12,7 @@ GORUN=go run
 all: test build
 
 build:
-	$(GOBUILD) -o $(BINARY_NAME) -v ./cmd
+	$(GOBUILD) -o $(BINARY_NAME) -v .
 
 test:
 	$(GOTEST) -v ./...
