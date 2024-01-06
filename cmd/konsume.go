@@ -18,19 +18,14 @@ import (
 )
 
 func Execute() {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
-	slog.SetDefault(logger)
 	slog.Info("Starting konsume")
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %s", err)
 	}
-	if cfg.Debug {
-		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
-	}
 
-	logger.Debug("Loaded configuration successfully")
+	setupLogger(cfg)
 
 	consumers := make(map[string]queue.MessageQueueConsumer)
 	providerMap := make(map[string]*config.ProviderConfig)
@@ -48,6 +43,23 @@ func Execute() {
 	waitForShutdown(signalChannel)
 
 	slog.Info("Shut down gracefully")
+}
+
+// setupLogger configures the logger based on the configuration
+func setupLogger(cfg *config.Config) {
+	if cfg.Log == "json" {
+		if cfg.Debug {
+			slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})))
+		} else {
+			slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})))
+		}
+	} else {
+		if cfg.Debug {
+			slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})))
+		} else {
+			slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})))
+		}
+	}
 }
 
 // initProviders initializes the consumers for each provider

@@ -112,50 +112,51 @@ queues:
 
 ## Configuration
 
-| Parameter                         | Description                                                                                                      | Is Required?                            |
-|:----------------------------------|:-----------------------------------------------------------------------------------------------------------------|:----------------------------------------|
-| `debug`                           | Enable debug logging level                                                                                       | no                                      |
-| `providers`                       | List of configuration for queue sources                                                                          | yes                                     |
-| `providers.name`                  | Name of the queue source                                                                                         | yes                                     |
-| `providers.type`                  | Type of the queue source. Supported types are `rabbitmq`, `kafka` and `activemq`                                 | yes                                     |
-| `providers.retry`                 | Amount of times to retry connecting to queue source                                                              | no                                      |
-| `providers.amqp-config`           | Configuration for RabbitMQ                                                                                       | yes (if type is rabbitmq)               |
-| `providers.amqp-config.host`      | Host of the RabbitMQ server                                                                                      | yes (if type is rabbitmq)               |
-| `providers.amqp-config.port`      | Port of the RabbitMQ server                                                                                      | yes (if type is rabbitmq)               |
-| `providers.amqp-config.username`  | Username for the RabbitMQ server                                                                                 | yes (if type is rabbitmq)               |
-| `providers.amqp-config.password`  | Password for the RabbitMQ server                                                                                 | yes (if type is rabbitmq)               |
-| `providers.kafka-config`          | Configuration for Kafka                                                                                          | yes (if type is kafka)                  |
-| `providers.kafka-config.brokers`  | List of Kafka brokers                                                                                            | yes (if type is kafka)                  |
-| `providers.kafka-config.topic`    | Topic name for Kafka                                                                                             | yes (if type is kafka)                  |
-| `providers.kafka-config.group`    | Group name for Kafka                                                                                             | yes (if type is kafka)                  |
-| `providers.stomp-config`          | Configuration for ActiveMQ                                                                                       | yes (if type is activemq)               |
-| `providers.stomp-config.host`     | Host of the ActiveMQ server                                                                                      | yes (if type is activemq)               |
-| `providers.stomp-config.port`     | Port of the ActiveMQ server                                                                                      | yes (if type is activemq)               |
-| `providers.stomp-config.username` | Username for the ActiveMQ server                                                                                 | yes (if type is activemq)               |
-| `providers.stomp-config.password` | Password for the ActiveMQ server                                                                                 | yes (if type is activemq)               |
-| `queues`                          | List of configuration for queues                                                                                 | yes                                     |
-| `queues.name`                     | Name of the queue                                                                                                | yes                                     |
-| `queues.provider`                 | Name of the queue source                                                                                         | yes (should match a provider name )     |
-| `queues.retry`                    | Retry mechanism for queue                                                                                        | no                                      |
-| `queues.retry.enabled`            | Flag for enabling/disabling retry mechanism                                                                      | yes (if retry is enabled)               |
-| `queues.retry.strategy`           | Type of the retry mechanism. Supported types are `fixed`, `expo`, and `random`                                   | no (defaults to fixed)                  |
-| `queues.retry.max_retries`        | Maximum amount of times that retrying will be triggered                                                          | yes (if retry is enabled)               |
-| `queues.retry.interval`           | Amount of time between retries                                                                                   | yes (if retry is enabled)               |
-| `queues.retry.threshold_status`   | Minimum HTTP status code to trigger retry mechanism, any status code above or equal this will trigger retrying   | no (defaults to 500)                    |
-| `queues.routes`                   | List of configuration for routes                                                                                 | yes                                     |
-| `queues.routes.name`              | Name of the route                                                                                                | yes                                     |
-| `queues.routes.type`              | Type of the route.                                                                                               | no (defaults to REST)                   |
-| `queues.routes.method`            | HTTP method for the route                                                                                        | no (defaults to POST)                   |
-| `queues.routes.url`               | URL for the route                                                                                                | yes                                     |
-| `queues.routes.headers`           | List of headers for the route                                                                                    | no                                      |
-| `queues.routes.body`              | List of key-values to customize body of the request                                                              | no                                      |
-| `queues.routes.query`             | List of key-values to customize query params of the request                                                      | no                                      |
-| `queues.routes.timeout`           | Timeout of the request                                                                                           | no (defaults to 10s)                    |
-| `metrics`                         | Configuration for Prometheus metrics                                                                             | no                                      |
-| `metrics.enabled`                 | Flag for enabling/disabling Prometheus metrics                                                                   | no (defaults to false)                  |
-| `metrics.port`                    | Port for Prometheus metrics                                                                                      | no (defaults to 8080)                   |
-| `metrics.path`                    | Path for Prometheus metrics endpoint                                                                             | no (defaults to /metrics)               |
-| `metrics.threshold-status`        | Minimum HTTP status code to trigger Prometheus metrics, any status code above or equal this will trigger metrics | no (defaults to 500)                    |
+| Parameter                         | Description                                                                                                      | Is Required?                        |
+|:----------------------------------|:-----------------------------------------------------------------------------------------------------------------|:------------------------------------|
+| `debug`                           | Enable debug logging level                                                                                       | no                                  |
+| `providers`                       | List of configuration for queue sources                                                                          | yes                                 |
+| `providers.name`                  | Name of the queue source                                                                                         | yes                                 |
+| `providers.type`                  | Type of the queue source. Supported types are `rabbitmq`, `kafka` and `activemq`                                 | yes                                 |
+| `providers.retry`                 | Amount of times to retry connecting to queue source                                                              | no                                  |
+| `providers.amqp-config`           | Configuration for RabbitMQ                                                                                       | yes (if type is rabbitmq)           |
+| `providers.amqp-config.host`      | Host of the RabbitMQ server                                                                                      | yes (if type is rabbitmq)           |
+| `providers.amqp-config.port`      | Port of the RabbitMQ server                                                                                      | yes (if type is rabbitmq)           |
+| `providers.amqp-config.username`  | Username for the RabbitMQ server                                                                                 | yes (if type is rabbitmq)           |
+| `providers.amqp-config.password`  | Password for the RabbitMQ server                                                                                 | yes (if type is rabbitmq)           |
+| `providers.kafka-config`          | Configuration for Kafka                                                                                          | yes (if type is kafka)              |
+| `providers.kafka-config.brokers`  | List of Kafka brokers                                                                                            | yes (if type is kafka)              |
+| `providers.kafka-config.topic`    | Topic name for Kafka                                                                                             | yes (if type is kafka)              |
+| `providers.kafka-config.group`    | Group name for Kafka                                                                                             | yes (if type is kafka)              |
+| `providers.stomp-config`          | Configuration for ActiveMQ                                                                                       | yes (if type is activemq)           |
+| `providers.stomp-config.host`     | Host of the ActiveMQ server                                                                                      | yes (if type is activemq)           |
+| `providers.stomp-config.port`     | Port of the ActiveMQ server                                                                                      | yes (if type is activemq)           |
+| `providers.stomp-config.username` | Username for the ActiveMQ server                                                                                 | yes (if type is activemq)           |
+| `providers.stomp-config.password` | Password for the ActiveMQ server                                                                                 | yes (if type is activemq)           |
+| `queues`                          | List of configuration for queues                                                                                 | yes                                 |
+| `queues.name`                     | Name of the queue                                                                                                | yes                                 |
+| `queues.provider`                 | Name of the queue source                                                                                         | yes (should match a provider name ) |
+| `queues.retry`                    | Retry mechanism for queue                                                                                        | no                                  |
+| `queues.retry.enabled`            | Flag for enabling/disabling retry mechanism                                                                      | yes (if retry is enabled)           |
+| `queues.retry.strategy`           | Type of the retry mechanism. Supported types are `fixed`, `expo`, and `random`                                   | no (defaults to fixed)              |
+| `queues.retry.max_retries`        | Maximum amount of times that retrying will be triggered                                                          | yes (if retry is enabled)           |
+| `queues.retry.interval`           | Amount of time between retries                                                                                   | yes (if retry is enabled)           |
+| `queues.retry.threshold_status`   | Minimum HTTP status code to trigger retry mechanism, any status code above or equal this will trigger retrying   | no (defaults to 500)                |
+| `queues.routes`                   | List of configuration for routes                                                                                 | yes                                 |
+| `queues.routes.name`              | Name of the route                                                                                                | yes                                 |
+| `queues.routes.type`              | Type of the route.                                                                                               | no (defaults to REST)               |
+| `queues.routes.method`            | HTTP method for the route                                                                                        | no (defaults to POST)               |
+| `queues.routes.url`               | URL for the route                                                                                                | yes                                 |
+| `queues.routes.headers`           | List of headers for the route                                                                                    | no                                  |
+| `queues.routes.body`              | List of key-values to customize body of the request                                                              | no                                  |
+| `queues.routes.query`             | List of key-values to customize query params of the request                                                      | no                                  |
+| `queues.routes.timeout`           | Timeout of the request                                                                                           | no (defaults to 10s)                |
+| `metrics`                         | Configuration for Prometheus metrics                                                                             | no                                  |
+| `metrics.enabled`                 | Flag for enabling/disabling Prometheus metrics                                                                   | no (defaults to false)              |
+| `metrics.port`                    | Port for Prometheus metrics                                                                                      | no (defaults to 8080)               |
+| `metrics.path`                    | Path for Prometheus metrics endpoint                                                                             | no (defaults to /metrics)           |
+| `metrics.threshold-status`        | Minimum HTTP status code to trigger Prometheus metrics, any status code above or equal this will trigger metrics | no (defaults to 500)                |
+| `log`                             | Format type of logging. Available formats are `text` and `json`                                                  | no (defaults to text)               |
 
 ## FAQ
 

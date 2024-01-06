@@ -29,13 +29,16 @@ type Config struct {
 
 	// Metrics is the configuration for the metrics endpoint
 	Metrics *MetricsConfig `yaml:"metrics"`
+
+	// Log is the format of the log
+	Log string `yaml:"log,omitempty"`
 }
 
 // LoadConfig loads the configuration from the config.yaml file
 func LoadConfig() (*Config, error) {
 	configPath := os.Getenv("KONSUME_CONFIG_PATH")
 	if len(configPath) == 0 {
-		slog.Debug("No configuration path defined, using default path /config/config.yaml")
+		slog.Info("No configuration path defined, using default path /config/config.yaml")
 		configPath = "/config/config.yaml"
 	}
 	slog.Info("Loading configuration from", "path", configPath)
@@ -53,7 +56,7 @@ func LoadConfig() (*Config, error) {
 		slog.Error("Failed to unmarshal configuration file", "error", err)
 		return nil, unmarshalConfigFileError
 	}
-	slog.Debug("Loaded configuration successfully")
+	slog.Info("Loaded configuration successfully")
 
 	err = cfg.ValidateAll()
 	if err != nil {
@@ -92,6 +95,11 @@ func (c *Config) ValidateAll() error {
 			return err
 		}
 	}
+
+	if c.Log == "" {
+		c.Log = "text"
+	}
+
 	if c.Debug {
 		slog.Debug("Configuration validated successfully")
 	}
