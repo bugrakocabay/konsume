@@ -1,4 +1,10 @@
+log: json
 debug: true
+metrics:
+  enabled: true
+  port: 8080
+  path: "/metrics"
+  threshold-status: 500
 providers:
   - name: "rabbit-queue"
     type: "rabbitmq"
