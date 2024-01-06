@@ -680,6 +680,7 @@ queues:
 						},
 					},
 				},
+				Log: "text",
 			},
 		},
 		{
@@ -746,6 +747,63 @@ queues:
 						},
 					},
 				},
+				Log: "text",
+			},
+		},
+		{
+			name:       "should return default log type if log is not defined ",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    routes:
+      - name: "test-route"
+        url: "http://localhost:8080"
+        method: "POST"
+        type: "REST"
+        timeout: 3s
+`,
+			},
+			expectedError: nil,
+			expectedConfig: &Config{
+				Providers: []*ProviderConfig{
+					{
+						Name: "test-queue",
+						Type: "rabbitmq",
+						AMQPConfig: &AMQPConfig{
+							Host:     "rabbitmq",
+							Port:     5672,
+							Username: "user",
+							Password: "password",
+						},
+					},
+				},
+				Queues: []*QueueConfig{
+					{
+						Name:     "test",
+						Provider: "test-queue",
+						Routes: []*RouteConfig{
+							{
+								Name:    "test-route",
+								URL:     "http://localhost:8080",
+								Method:  "POST",
+								Type:    common.RouteTypeREST,
+								Timeout: 3 * time.Second,
+							},
+						},
+					},
+				},
+				Log: "text",
 			},
 		},
 		{
@@ -816,6 +874,7 @@ queues:
 						},
 					},
 				},
+				Log: "text",
 			},
 		},
 		{
@@ -871,6 +930,7 @@ queues:
 						},
 					},
 				},
+				Log: "text",
 			},
 		},
 		{
@@ -925,6 +985,7 @@ queues:
 						},
 					},
 				},
+				Log: "text",
 			},
 		},
 		{
@@ -980,6 +1041,7 @@ queues:
 						},
 					},
 				},
+				Log: "text",
 			},
 		},
 		{
@@ -1175,6 +1237,7 @@ queues:
 						},
 					},
 				},
+				Log: "text",
 			},
 		},
 	}
