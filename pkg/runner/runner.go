@@ -73,7 +73,7 @@ func connectWithRetry(ctx context.Context, consumer queue.MessageQueueConsumer, 
 
 // sendRequestWithStrategy attempts to send an HTTP request and retries based on the provided configuration
 func sendRequestWithStrategy(qCfg *config.QueueConfig, rCfg *config.RouteConfig, mCfg *config.MetricsConfig, requester requester.HTTPRequester) {
-	resp, err := requester.SendRequest(mCfg)
+	resp, err := requester.SendRequest(mCfg, rCfg.Timeout)
 	if err != nil || shouldRetry(resp, qCfg.Retry) {
 		if resp != nil && resp.StatusCode != 0 {
 			slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode)
@@ -102,12 +102,14 @@ func retryRequest(qCfg *config.QueueConfig, rCfg *config.RouteConfig, mCfg *conf
 	for i := 1; i <= qCfg.Retry.MaxRetries; i++ {
 		slog.Info("Retrying request", "route", rCfg.Name, "retry", i)
 		time.Sleep(calculateRetryInterval(qCfg.Retry, i))
-		resp, err := requester.SendRequest(mCfg)
+		resp, err := requester.SendRequest(mCfg, rCfg.Timeout)
 		if err == nil && !shouldRetry(resp, qCfg.Retry) {
 			if resp != nil {
 				slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode)
 			}
 			return
+		} else {
+			slog.Error("Failed to send request", "route", rCfg.Name, "error", err)
 		}
 	}
 }

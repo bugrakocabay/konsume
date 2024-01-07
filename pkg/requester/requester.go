@@ -2,9 +2,12 @@ package requester
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"log/slog"
+	"net"
 	"net/http"
+	"time"
 
 	"github.com/bugrakocabay/konsume/pkg/config"
 	"github.com/bugrakocabay/konsume/pkg/metrics"
@@ -12,7 +15,7 @@ import (
 
 // HTTPRequester is an interface for sending HTTP requests, useful for mocking in tests
 type HTTPRequester interface {
-	SendRequest(m *config.MetricsConfig) (*http.Response, error)
+	SendRequest(m *config.MetricsConfig, timeout time.Duration) (*http.Response, error)
 }
 
 // Requester is the struct that contains the request information.
@@ -34,7 +37,7 @@ func NewRequester(endpoint, method string, body []byte, headers map[string]strin
 }
 
 // SendRequest sends the request to the given endpoint.
-func (r *Requester) SendRequest(m *config.MetricsConfig) (*http.Response, error) {
+func (r *Requester) SendRequest(m *config.MetricsConfig, timeout time.Duration) (*http.Response, error) {
 	var (
 		resp *http.Response
 		err  error
@@ -56,9 +59,16 @@ func (r *Requester) SendRequest(m *config.MetricsConfig) (*http.Response, error)
 		}
 	}
 
-	resp, err = http.DefaultClient.Do(req)
+	client := &http.Client{
+		Timeout: timeout,
+	}
+
+	resp, err = client.Do(req)
 	if err != nil {
-		slog.Error("Failed to send request", "error", err)
+		var netErr net.Error
+		if errors.As(err, &netErr) && netErr.Timeout() {
+			return resp, errors.New("request timed out after " + timeout.String())
+		}
 		return resp, err
 	}
 	defer resp.Body.Close()
