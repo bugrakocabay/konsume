@@ -22,7 +22,7 @@ type MockHTTPRequester struct {
 	CallCount    int
 }
 
-func (m *MockHTTPRequester) SendRequest(mCfg *config.MetricsConfig) (*http.Response, error) {
+func (m *MockHTTPRequester) SendRequest(mCfg *config.MetricsConfig, timeout time.Duration) (*http.Response, error) {
 	m.CallCount++
 
 	if m.MockError != nil {
