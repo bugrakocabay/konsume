@@ -27,16 +27,16 @@ func Execute() {
 
 	setupLogger(cfg)
 
-	consumers := make(map[string]queue.MessageQueueConsumer)
+	consumerMap := make(map[string]queue.MessageQueueConsumer)
 	providerMap := make(map[string]*config.ProviderConfig)
 
-	initProviders(cfg, consumers, providerMap)
+	initProviders(cfg, consumerMap, providerMap)
 	if cfg.Metrics != nil && cfg.Metrics.Enabled {
 		metrics.InitMetrics(cfg.Metrics)
 	}
 
-	if err = runner.StartConsumers(cfg, consumers, providerMap); err != nil {
-		log.Fatalf("Failed to start consumers: %s", err)
+	if err = runner.StartConsumers(cfg, consumerMap, providerMap); err != nil {
+		log.Fatalf("Failed to start consumerMap: %s", err)
 	}
 
 	signalChannel := setupSignalHandling()
