@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/bugrakocabay/konsume/pkg/config"
+
 	"github.com/go-stomp/stomp/v3"
 )
 
@@ -24,7 +25,7 @@ func NewConsumer(cfg *config.StompConfig) *Consumer {
 }
 
 func (c *Consumer) Connect(ctx context.Context) error {
-	slog.Error("Attempting to connect to ActiveMQ", "host", c.config.Host, "port", c.config.Port)
+	slog.Debug("Attempting to connect to ActiveMQ", "host", c.config.Host, "port", c.config.Port)
 	var err error
 	var options = []func(*stomp.Conn) error{
 		stomp.ConnOpt.HeartBeat(2*time.Hour, 2*time.Hour),
@@ -42,7 +43,7 @@ func (c *Consumer) Connect(ctx context.Context) error {
 }
 
 func (c *Consumer) Consume(ctx context.Context, queueName string, handler func(msg []byte) error) error {
-	slog.Debug("Starting to consume messages from ActiveMQ", "topic", queueName)
+	slog.Debug("Starting to consume messages from ActiveMQ", "queueName", queueName)
 	sub, err := c.conn.Subscribe(queueName, stomp.AckAuto)
 	if err != nil {
 		return err
