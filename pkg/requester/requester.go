@@ -73,7 +73,7 @@ func (r *Requester) SendRequest(m *config.MetricsConfig, timeout time.Duration) 
 	}
 	defer resp.Body.Close()
 
-	if m.Enabled {
+	if m != nil && m.Enabled {
 		metrics.HttpRequestsMade.Inc()
 		if resp.StatusCode >= m.ThresholdStatus {
 			metrics.HttpRequestsFailed.Inc()

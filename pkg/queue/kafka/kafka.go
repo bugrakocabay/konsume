@@ -2,8 +2,9 @@ package kafka
 
 import (
 	"context"
-	"github.com/bugrakocabay/konsume/pkg/config"
 	"log/slog"
+
+	"github.com/bugrakocabay/konsume/pkg/config"
 
 	"github.com/segmentio/kafka-go"
 )
