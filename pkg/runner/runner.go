@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"log/slog"
@@ -20,8 +19,6 @@ import (
 // StartConsumers starts the consumers for all queues
 func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueConsumer, providers map[string]*config.ProviderConfig) error {
 	var wg sync.WaitGroup
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	for _, qCfg := range cfg.Queues {
 		consumer, ok := consumers[qCfg.Provider]
@@ -37,10 +34,10 @@ func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueC
 		wg.Add(1)
 		go func(c queue.MessageQueueConsumer, qc *config.QueueConfig, pc *config.ProviderConfig) {
 			defer wg.Done()
-			if err := connectWithRetry(ctx, c, pc); err != nil {
+			if err := connectWithRetry(c, pc); err != nil {
 				return
 			}
-			if err := listenAndProcess(ctx, c, qc, cfg.Metrics); err != nil {
+			if err := listenAndProcess(c, qc, cfg.Metrics); err != nil {
 				log.Printf("Failed to start consumer for queue %s: %s", qc.Name, err)
 			}
 		}(consumer, qCfg, providerCfg)
@@ -51,16 +48,16 @@ func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueC
 }
 
 // connectWithRetry tries to connect to the queue with the given consumer
-func connectWithRetry(ctx context.Context, consumer queue.MessageQueueConsumer, cfg *config.ProviderConfig) error {
+func connectWithRetry(consumer queue.MessageQueueConsumer, cfg *config.ProviderConfig) error {
 	var err error
-	err = consumer.Connect(ctx)
+	err = consumer.Connect()
 	if err != nil {
 		slog.Error("Failed to connect to queue", "error", err)
 		if cfg.Retry > 0 {
 			for i := 1; i <= cfg.Retry; i++ {
 				time.Sleep(time.Duration(5) * time.Second)
 				slog.Info("Retrying to connect", "retry", i)
-				err = consumer.Connect(ctx)
+				err = consumer.Connect()
 				if err == nil {
 					break
 				}

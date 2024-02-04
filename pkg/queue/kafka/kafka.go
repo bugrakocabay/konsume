@@ -23,7 +23,7 @@ func NewConsumer(cfg *config.KafkaConfig) *Consumer {
 }
 
 // Connect creates a connection to Kafka
-func (c *Consumer) Connect(ctx context.Context) error {
+func (c *Consumer) Connect() error {
 	slog.Debug("Attempting to connect to Kafka", "brokers", c.config.Brokers, "topic", c.config.Topic)
 	var err error
 	c.conn, err = kafka.DialLeader(context.Background(), "tcp", c.config.Brokers[0], c.config.Topic, 0)
@@ -35,7 +35,7 @@ func (c *Consumer) Connect(ctx context.Context) error {
 }
 
 // Consume consumes messages from Kafka
-func (c *Consumer) Consume(ctx context.Context, queueName string, handler func(msg []byte) error) error {
+func (c *Consumer) Consume(queueName string, handler func(msg []byte) error) error {
 	slog.Debug("Starting to consume messages from Kafka", "topic", queueName)
 	for {
 		msg, err := c.conn.ReadMessage(10e6)

@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"context"
 	"errors"
 	"strings"
 	"testing"
@@ -16,8 +15,7 @@ func TestListenAndProcess(t *testing.T) {
 		ConnectFunc: func() error { return nil },
 		ConsumeFunc: func(queueName string, handler func(msg []byte) error) error { return nil },
 	}
-	ctx := context.Background()
-	err := listenAndProcess(ctx, mockConsumer, qCfg, nil)
+	err := listenAndProcess(mockConsumer, qCfg, nil)
 	if err != nil {
 		t.Errorf("listenAndProcess() error = %v, wantErr %v", err, nil)
 	}
@@ -32,8 +30,7 @@ func TestListenAndProcess_ConnectFails(t *testing.T) {
 	mockConsumer := &MockMessageQueueConsumer{
 		ConnectFunc: func() error { return errors.New("connection failed") },
 	}
-	ctx := context.Background()
-	err := listenAndProcess(ctx, mockConsumer, qCfg, nil)
+	err := listenAndProcess(mockConsumer, qCfg, nil)
 	if err == nil {
 		t.Error("Expected an error when connection fails, but got nil")
 	}
@@ -48,8 +45,7 @@ func TestListenAndProcess_ConsumptionFails(t *testing.T) {
 			return errors.New("consumption failed")
 		},
 	}
-	ctx := context.Background()
-	err := listenAndProcess(ctx, mockConsumer, qCfg, nil)
+	err := listenAndProcess(mockConsumer, qCfg, nil)
 	if err == nil {
 		t.Error("Expected an error when consumption fails, but got nil")
 	}
@@ -64,8 +60,7 @@ func TestListenAndProcess_SuccessfulConsumption(t *testing.T) {
 			return handler([]byte("{\"key\":\"value\"}"))
 		},
 	}
-	ctx := context.Background()
-	err := listenAndProcess(ctx, mockConsumer, qCfg, nil)
+	err := listenAndProcess(mockConsumer, qCfg, nil)
 	if err != nil {
 		t.Errorf("Expected no error, but got: %v", err)
 	}
@@ -82,8 +77,7 @@ func TestListenAndProcess_InvalidMessageFormat(t *testing.T) {
 			return handler([]byte("invalid message"))
 		},
 	}
-	ctx := context.Background()
-	_ = listenAndProcess(ctx, mockConsumer, qCfg, nil) // Error is not expected to be returned
+	_ = listenAndProcess(mockConsumer, qCfg, nil) // Error is not expected to be returned
 
 	if !handlerCalled {
 		t.Error("Expected handler to be called, but it was not")
@@ -91,7 +85,6 @@ func TestListenAndProcess_InvalidMessageFormat(t *testing.T) {
 }
 
 func TestListenAndProcess_RouteHandling(t *testing.T) {
-	ctx := context.Background()
 	mockConsumer := &MockMessageQueueConsumer{
 		ConsumeFunc: func(queueName string, handler func(msg []byte) error) error {
 			return handler([]byte("{\"key\":\"value\"}"))
@@ -107,7 +100,7 @@ func TestListenAndProcess_RouteHandling(t *testing.T) {
 			Query:  map[string]string{"param": "value"},
 		},
 	}
-	err := listenAndProcess(ctx, mockConsumer, qCfg1, nil)
+	err := listenAndProcess(mockConsumer, qCfg1, nil)
 	if err != nil {
 		t.Errorf("listenAndProcess() with non-empty body returned error: %v", err)
 	}
@@ -121,14 +114,13 @@ func TestListenAndProcess_RouteHandling(t *testing.T) {
 			Query:  map[string]string{"param": "value"},
 		},
 	}
-	err = listenAndProcess(ctx, mockConsumer, qCfg2, nil)
+	err = listenAndProcess(mockConsumer, qCfg2, nil)
 	if err != nil {
 		t.Errorf("listenAndProcess() with empty body returned error: %v", err)
 	}
 }
 
 func TestListenAndProcess_PrepareRequestBody_Success(t *testing.T) {
-	ctx := context.Background()
 	qCfg := &config.QueueConfig{
 		Name: "testQueue",
 		Routes: []*config.RouteConfig{
@@ -146,7 +138,7 @@ func TestListenAndProcess_PrepareRequestBody_Success(t *testing.T) {
 		},
 	}
 
-	err := listenAndProcess(ctx, mockConsumer, qCfg, nil)
+	err := listenAndProcess(mockConsumer, qCfg, nil)
 	if err != nil {
 		t.Errorf("listenAndProcess() with valid body returned error: %v", err)
 	}

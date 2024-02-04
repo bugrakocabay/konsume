@@ -2,7 +2,6 @@ package runner
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"io"
 	"log"
@@ -40,7 +39,7 @@ type MockMessageQueueConsumer struct {
 	CloseCalled   bool
 }
 
-func (m *MockMessageQueueConsumer) Connect(ctx context.Context) error {
+func (m *MockMessageQueueConsumer) Connect() error {
 	m.ConnectCalled = true
 	if m.ConnectFunc != nil {
 		return m.ConnectFunc()
@@ -48,7 +47,7 @@ func (m *MockMessageQueueConsumer) Connect(ctx context.Context) error {
 	return errors.New("Connect not implemented")
 }
 
-func (m *MockMessageQueueConsumer) Consume(ctx context.Context, queueName string, handler func(msg []byte) error) error {
+func (m *MockMessageQueueConsumer) Consume(queueName string, handler func(msg []byte) error) error {
 	m.ConsumeCalled = true
 	if m.ConsumeFunc != nil {
 		return m.ConsumeFunc(queueName, handler)
@@ -151,12 +150,11 @@ func TestConnectWithRetry(t *testing.T) {
 			mockConsumer := &MockMessageQueueConsumer{
 				ConnectFunc: tt.connectFunc,
 			}
-			ctx := context.Background()
 			cfg := &config.ProviderConfig{
 				Retry: tt.retryCount,
 			}
 
-			err := connectWithRetry(ctx, mockConsumer, cfg)
+			err := connectWithRetry(mockConsumer, cfg)
 
 			if (err != nil) != tt.expectError {
 				t.Errorf("connectWithRetry() error = %v, wantErr %v", err, tt.expectError)
