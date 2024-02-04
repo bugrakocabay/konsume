@@ -1,7 +1,6 @@
 package rabbitmq
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 
@@ -25,7 +24,7 @@ func NewConsumer(cfg *config.AMQPConfig) *Consumer {
 }
 
 // Connect creates a connection to RabbitMQ and a channel
-func (c *Consumer) Connect(ctx context.Context) error {
+func (c *Consumer) Connect() error {
 	slog.Debug("Attempting to connect to RabbitMQ", "host", c.config.Host, "port", c.config.Port)
 	var err error
 	cfg := c.config
@@ -44,7 +43,7 @@ func (c *Consumer) Connect(ctx context.Context) error {
 }
 
 // Consume consumes messages from RabbitMQ
-func (c *Consumer) Consume(ctx context.Context, queueName string, handler func(msg []byte) error) error {
+func (c *Consumer) Consume(queueName string, handler func(msg []byte) error) error {
 	_, err := c.channel.QueueDeclare(
 		queueName, // Name of the queue
 		true,      // Durable

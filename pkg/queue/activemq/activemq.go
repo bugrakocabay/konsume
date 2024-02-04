@@ -1,7 +1,6 @@
 package activemq
 
 import (
-	"context"
 	"log/slog"
 	"net"
 	"strconv"
@@ -24,7 +23,7 @@ func NewConsumer(cfg *config.StompConfig) *Consumer {
 	}
 }
 
-func (c *Consumer) Connect(ctx context.Context) error {
+func (c *Consumer) Connect() error {
 	slog.Debug("Attempting to connect to ActiveMQ", "host", c.config.Host, "port", c.config.Port)
 	var err error
 	var options = []func(*stomp.Conn) error{
@@ -42,7 +41,7 @@ func (c *Consumer) Connect(ctx context.Context) error {
 	return nil
 }
 
-func (c *Consumer) Consume(ctx context.Context, queueName string, handler func(msg []byte) error) error {
+func (c *Consumer) Consume(queueName string, handler func(msg []byte) error) error {
 	slog.Debug("Starting to consume messages from ActiveMQ", "queueName", queueName)
 	sub, err := c.conn.Subscribe(queueName, stomp.AckAuto)
 	if err != nil {

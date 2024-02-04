@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -15,10 +14,10 @@ import (
 )
 
 // listenAndProcess listens the queue and processes the messages
-func listenAndProcess(ctx context.Context, consumer queue.MessageQueueConsumer, qCfg *config.QueueConfig, mCfg *config.MetricsConfig) error {
+func listenAndProcess(consumer queue.MessageQueueConsumer, qCfg *config.QueueConfig, mCfg *config.MetricsConfig) error {
 	semaphore := make(chan struct{}, runtime.NumCPU()*2)
 
-	return consumer.Consume(ctx, qCfg.Name, func(msg []byte) error {
+	return consumer.Consume(qCfg.Name, func(msg []byte) error {
 		slog.Info("Received a message", "queue", qCfg.Name, "message", string(msg))
 		semaphore <- struct{}{}
 		go func(msg []byte) {
