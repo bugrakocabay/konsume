@@ -1,7 +1,6 @@
 package konsume
 
 import (
-	"github.com/bugrakocabay/konsume/pkg/runner"
 	"log"
 	"log/slog"
 	"os"
@@ -15,6 +14,7 @@ import (
 	"github.com/bugrakocabay/konsume/pkg/queue/activemq"
 	"github.com/bugrakocabay/konsume/pkg/queue/kafka"
 	"github.com/bugrakocabay/konsume/pkg/queue/rabbitmq"
+	"github.com/bugrakocabay/konsume/pkg/runner"
 )
 
 func Execute() {
