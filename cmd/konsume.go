@@ -1,6 +1,7 @@
 package konsume
 
 import (
+	"github.com/bugrakocabay/konsume/pkg/runner"
 	"log"
 	"log/slog"
 	"os"
@@ -14,7 +15,6 @@ import (
 	"github.com/bugrakocabay/konsume/pkg/queue/activemq"
 	"github.com/bugrakocabay/konsume/pkg/queue/kafka"
 	"github.com/bugrakocabay/konsume/pkg/queue/rabbitmq"
-	"github.com/bugrakocabay/konsume/pkg/runner"
 )
 
 func Execute() {
@@ -35,9 +35,11 @@ func Execute() {
 		metrics.InitMetrics(cfg.Metrics)
 	}
 
-	if err = runner.StartConsumers(cfg, consumerMap, providerMap); err != nil {
-		log.Fatalf("Failed to start consumerMap: %s", err)
-	}
+	go func() {
+		if err = runner.StartConsumers(cfg, consumerMap, providerMap); err != nil {
+			log.Fatalf("Failed to start consumerMap: %s", err)
+		}
+	}()
 
 	signalChannel := setupSignalHandling()
 	waitForShutdown(signalChannel)
