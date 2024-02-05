@@ -47,6 +47,13 @@ func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueC
 	return nil
 }
 
+// StopConsumers kills the connections of the consumers
+func StopConsumers(consumers map[string]queue.MessageQueueConsumer) {
+	for _, c := range consumers {
+		c.Close()
+	}
+}
+
 // connectWithRetry tries to connect to the queue with the given consumer
 func connectWithRetry(consumer queue.MessageQueueConsumer, cfg *config.ProviderConfig) error {
 	var err error

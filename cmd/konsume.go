@@ -35,12 +35,16 @@ func Execute() {
 		metrics.InitMetrics(cfg.Metrics)
 	}
 
-	if err = runner.StartConsumers(cfg, consumerMap, providerMap); err != nil {
-		log.Fatalf("Failed to start consumerMap: %s", err)
-	}
+	go func() {
+		if err = runner.StartConsumers(cfg, consumerMap, providerMap); err != nil {
+			log.Fatalf("Failed to start consumerMap: %s", err)
+		}
+	}()
 
 	signalChannel := setupSignalHandling()
 	waitForShutdown(signalChannel)
+
+	runner.StopConsumers(consumerMap)
 
 	slog.Info("Shut down gracefully")
 }
