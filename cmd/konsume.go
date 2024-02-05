@@ -44,6 +44,8 @@ func Execute() {
 	signalChannel := setupSignalHandling()
 	waitForShutdown(signalChannel)
 
+	runner.StopConsumers(consumerMap)
+
 	slog.Info("Shut down gracefully")
 }
 
