@@ -251,6 +251,11 @@ queues:
 <details>
 <summary> <b>How to see the metrics?</b> </summary>
 konsume provides a Prometheus endpoint for monitoring metrics. You can see the metrics at <code>/metrics</code> by default. Here you will find a list of metrics that Prometheus can scrape by default.
+<br> Also, konsume provides custom metrics for the following events:
+<br> - <code>konsume_messages_consumed_total</code>: Total number of messages consumed.
+<br> - <code>konsume_http_requests_made_total</code>: Total number of HTTP requests made.
+<br> - <code>konsume_http_requests_succeeded_total</code>: Total number of HTTP requests succeeded.
+<br> - <code>konsume_http_requests_failed_total</code>: Total number of HTTP requests failed.
 
 </details>
 
