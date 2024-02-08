@@ -1,0 +1,29 @@
+log: json
+debug: true
+providers:
+  - name: "rabbit-queue"
+    type: "rabbitmq"
+    retry: 5
+    amqp-config:
+      host: "localhost"
+      port: 5672
+      username: "user"
+      password: "password"
+
+queues:
+  - name: "queue-for-rabbit"
+    provider: "rabbit-queue"
+    retry:
+      enabled: true
+      threshold_status: 500
+      max_retries: 2
+      interval: 5s
+      strategy: "fixed"
+    routes:
+      - name: "ServiceA_Queue1"
+        type: "REST"
+        method: "POST"
+        url: "https://someurl.com"
+        headers:
+          Content-Type: "application/json"
+        timeout: 10s
