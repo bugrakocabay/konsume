@@ -6,8 +6,6 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-      kafka:
-        condition: service_healthy
     environment:
       KONSUME_CONFIG_PATH: /config/config.yaml
     volumes:
