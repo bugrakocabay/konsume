@@ -396,26 +396,6 @@ queues:
 			expectedError: queueProviderDoesNotExistError,
 		},
 		{
-			name:       "should throw error if routes are not defined for queue",
-			configPath: "./config.yaml",
-			pathAndContent: map[string]string{
-				"config.yaml": `
-providers:
-  - name: "test-queue"
-    type: "rabbitmq"
-    amqp-config:
-      host: "rabbitmq"
-      port: 5672
-      username: "user"
-      password: "password"
-queues:
-  - name: "test"
-    provider: "test-queue"
-`,
-			},
-			expectedError: noRoutesDefinedError,
-		},
-		{
 			name:       "should throw error if route name is not defined for queue",
 			configPath: "./config.yaml",
 			pathAndContent: map[string]string{
@@ -1239,6 +1219,328 @@ queues:
 				},
 				Log: "text",
 			},
+		},
+		{
+			name:       "should return error if database name is not defined",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+databases:
+  - type: "postgresql"
+    connection-string: "postgres://user:password@localhost:5432"
+    table: "some-table"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    database-routes:
+      - name: "test-route"
+        provider: "sql-database"
+        mapping:
+          key: "some-column"
+`,
+			},
+			expectedError: databaseNameNotDefinedError,
+		},
+		{
+			name:       "should return error if database type is not defined",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+databases:
+  - name: "test-db"
+    connection-string: "postgres://user:password@localhost:5432"
+    table: "some-table"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    database-routes:
+      - name: "test-route"
+        provider: "test-db"
+        mapping:
+          key: "some-column"
+`,
+			},
+			expectedError: databaseTypeNotDefinedError,
+		},
+		{
+			name:       "should return error if database type is invalid",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+databases:
+  - name: "test-db"
+    type: "invalid-type"
+    connection-string: "postgres://user:password@localhost:5432"
+    table: "some-table"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    database-routes:
+      - name: "test-route"
+        provider: "test-db"
+        mapping:
+          key: "some-column"
+`,
+			},
+			expectedError: databaseTypeInvalidError,
+		},
+		{
+			name:       "should return error if database connection string is not defined",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+databases:
+  - name: "test-db"
+    type: "postgresql"
+    table: "some-table"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    database-routes:
+      - name: "test-route"
+        provider: "test-db"
+        mapping:
+          key: "some-column"
+`,
+			},
+			expectedError: databaseConnectionStringNotDefinedError,
+		},
+		{
+			name:       "should return error if database type is sql and table is not defined",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+databases:
+  - name: "test-db"
+    type: "postgresql"
+    connection-string: "postgres://user:password@localhost:5432"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    database-routes:
+      - name: "test-route"
+        provider: "test-db"
+        mapping:
+          key: "some-column"
+`,
+			},
+			expectedError: databaseTableNotDefinedError,
+		},
+		{
+			name:       "should return error if database type is mongo and database is not defined",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+databases:
+  - name: "test-db"
+    type: "mongodb"
+    connection-string: "mongodb://user:password@localhost:27017"
+    collection: "some-collection"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    database-routes:
+      - name: "test-route"
+        provider: "test-db"
+        mapping:
+          key: "some-field"
+`,
+			},
+			expectedError: databaseDatabaseNotDefinedError,
+		},
+		{
+			name:       "should return error if database type is mongo and collection is not defined",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+databases:
+  - name: "test-db"
+    type: "mongodb"
+    connection-string: "mongodb://user:password@localhost:27017"
+    database: "some-database"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    database-routes:
+      - name: "test-route"
+        provider: "test-db"
+        mapping:
+          key: "some-field"
+`,
+			},
+			expectedError: databaseCollectionNotDefinedError,
+		},
+		{
+			name:       "should return error if database route name is not defined for queue route config",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+databases:
+  - name: "test-db"
+    type: "postgresql"
+    connection-string: "postgres://user:password@localhost:5432"
+    table: "some-table"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    database-routes:
+      - provider: "test-db"
+        mapping:
+          key: "some-column"
+`,
+			},
+			expectedError: databaseRouteNameNotDefinedError,
+		},
+		{
+			name:       "should return error if database provider is not defined for queue route config",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+databases:
+  - name: "test-db"
+    type: "postgresql"
+    connection-string: "postgres://user:password@localhost:5432"
+    table: "some-table"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    database-routes:
+      - name: "test-route"
+        mapping:
+          key: "some-column"
+`,
+			},
+			expectedError: databaseRouteProviderNotDefinedError,
+		},
+		{
+			name:       "should return error if database provider does not exist in providers list for queue route config",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+databases:
+  - name: "test-db"
+    type: "postgresql"
+    connection-string: "postgres://user:password@localhost:5432"
+    table: "some-table"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    database-routes:
+      - name: "test-route"
+        provider: "invalid-provider"
+        mapping:
+          key: "some-column"
+`,
+			},
+			expectedError: databaseRouteProviderDoesNotExistError,
+		},
+		{
+			name:       "should return error if database mapping is not defined for queue route config",
+			configPath: "./config.yaml",
+			pathAndContent: map[string]string{
+				"config.yaml": `
+providers:
+  - name: "test-queue"
+    type: "rabbitmq"
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+databases:
+  - name: "test-db"
+    type: "postgresql"
+    connection-string: "postgres://user:password@localhost:5432"
+    table: "some-table"
+queues:
+  - name: "test"
+    provider: "test-queue"
+    database-routes:
+      - name: "test-route"
+        provider: "test-db"
+`,
+			},
+			expectedError: dataBaseRouteMappingNotDefinedError,
 		},
 	}
 

@@ -16,3 +16,8 @@ const (
 	RouteTypeREST    = "REST"
 	RouteTypeGraphQL = "graphql"
 )
+
+const (
+	DatabaseTypePostgresql = "postgresql"
+	DatabaseTypeMongoDB    = "mongodb"
+)
