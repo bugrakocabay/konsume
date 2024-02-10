@@ -11,9 +11,7 @@ var (
 	databaseTypeNotDefinedError             = errors.New("database type not defined")
 	databaseTypeInvalidError                = errors.New("database type invalid")
 	databaseConnectionStringNotDefinedError = errors.New("database connection string not defined")
-	databaseTableNotDefinedError            = errors.New("database table not defined")
 	databaseDatabaseNotDefinedError         = errors.New("database database not defined")
-	databaseCollectionNotDefinedError       = errors.New("database collection not defined")
 )
 
 // DatabaseConfig is the configuration for the database connections
@@ -30,14 +28,8 @@ type DatabaseConfig struct {
 	// Retry is the amount of times the connection should be retried
 	Retry int `yaml:"retry,omitempty"`
 
-	// Table is the table name for the database
-	Table string `yaml:"table,omitempty"`
-
 	// Database is the database name for the database
 	Database string `yaml:"database,omitempty"`
-
-	// Collection is the collection name for the database
-	Collection string `yaml:"collection,omitempty"`
 }
 
 func validateDatabaseConfig(database *DatabaseConfig) error {
@@ -53,14 +45,8 @@ func validateDatabaseConfig(database *DatabaseConfig) error {
 	if database.Type != common.DatabaseTypePostgresql && database.Type != common.DatabaseTypeMongoDB {
 		return databaseTypeInvalidError
 	}
-	if database.Type == common.DatabaseTypePostgresql && len(database.Table) == 0 {
-		return databaseTableNotDefinedError
-	}
 	if database.Type == common.DatabaseTypeMongoDB && len(database.Database) == 0 {
 		return databaseDatabaseNotDefinedError
-	}
-	if database.Type == common.DatabaseTypeMongoDB && len(database.Collection) == 0 {
-		return databaseCollectionNotDefinedError
 	}
 	return nil
 }
