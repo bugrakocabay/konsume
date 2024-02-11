@@ -8,13 +8,14 @@ import (
 
 	"github.com/bugrakocabay/konsume/pkg/common"
 	"github.com/bugrakocabay/konsume/pkg/config"
+	"github.com/bugrakocabay/konsume/pkg/database"
 	"github.com/bugrakocabay/konsume/pkg/queue"
 	"github.com/bugrakocabay/konsume/pkg/requester"
 	"github.com/bugrakocabay/konsume/pkg/util"
 )
 
 // listenAndProcess listens the queue and processes the messages
-func listenAndProcess(consumer queue.MessageQueueConsumer, qCfg *config.QueueConfig, mCfg *config.MetricsConfig) error {
+func listenAndProcess(consumer queue.MessageQueueConsumer, qCfg *config.QueueConfig, mCfg *config.MetricsConfig, databases map[string]database.Database) error {
 	semaphore := make(chan struct{}, runtime.NumCPU()*2)
 
 	return consumer.Consume(qCfg.Name, func(msg []byte) error {
@@ -32,22 +33,39 @@ func listenAndProcess(consumer queue.MessageQueueConsumer, qCfg *config.QueueCon
 				slog.Error("Failed to parse message", "error", err)
 				return
 			}
-			for _, rCfg := range qCfg.Routes {
-				var body []byte
 
-				if len(rCfg.Body) > 0 {
-					body, err = prepareRequestBody(rCfg, messageData)
-					if err != nil {
-						slog.Error("Failed to prepare request body", "error", err)
+			if qCfg.Routes != nil && len(qCfg.Routes) > 0 {
+				for _, rCfg := range qCfg.Routes {
+					var body []byte
+
+					if len(rCfg.Body) > 0 {
+						body, err = prepareRequestBody(rCfg, messageData)
+						if err != nil {
+							slog.Error("Failed to prepare request body", "error", err)
+							continue
+						}
+					} else {
+						body = msg
+					}
+					rCfg.URL = appendQueryParams(rCfg.URL, rCfg.Query)
+					rqstr := requester.NewRequester(rCfg.URL, rCfg.Method, body, rCfg.Headers)
+					sendRequestWithStrategy(qCfg, rCfg, mCfg, rqstr)
+				}
+			}
+
+			if qCfg.DatabaseRoutes != nil && len(qCfg.DatabaseRoutes) > 0 {
+				for _, dbRoute := range qCfg.DatabaseRoutes {
+					db, ok := databases[dbRoute.Provider]
+					if !ok {
+						slog.Error("Database not found", "database", dbRoute.Name)
 						continue
 					}
-				} else {
-					body = msg
+					if err = db.Insert(messageData, *dbRoute); err != nil {
+						slog.Error("Failed to insert data into database", "error", err)
+					}
 				}
-				rCfg.URL = appendQueryParams(rCfg.URL, rCfg.Query)
-				rqstr := requester.NewRequester(rCfg.URL, rCfg.Method, body, rCfg.Headers)
-				sendRequestWithStrategy(qCfg, rCfg, mCfg, rqstr)
 			}
+
 		}(msg)
 		return nil
 	})
