@@ -23,7 +23,7 @@ var (
 	invalidBodyForGraphQLError           = errors.New("when using graphql type, body must contain query or mutation")
 	bodyNotContainsStringForGraphQLError = errors.New("when using graphql type, body must contain string for query or mutation")
 
-	databaseRouteNameNotDefinedError              = errors.New("database route name not defined")
+  databaseRouteNameNotDefinedError              = errors.New("database route name not defined")
 	databaseRouteProviderNotDefinedError          = errors.New("database route provider not defined")
 	databaseRouteProviderDoesNotExistError        = errors.New("database route provider does not exist in databases list")
 	databaseRouteTableOrCollectionNotDefinedError = errors.New("database route table or collection not defined")
@@ -101,7 +101,7 @@ type DatabaseRouteConfig struct {
 	// Provider is the name of the provider database
 	Provider string `yaml:"provider"`
 
-	// Table is the name of the table in a SQL database
+  // Table is the name of the table in a SQL database
 	Table string `yaml:"table,omitempty"`
 
 	// Collection is the name of the collection in a NoSQL database
@@ -217,7 +217,7 @@ func (queue *QueueConfig) validateQueue(providers []*ProviderConfig, databases [
 			if !databaseExists {
 				return databaseRouteProviderDoesNotExistError
 			}
-			if len(databaseRoute.Table) == 0 && len(databaseRoute.Collection) == 0 {
+      if len(databaseRoute.Table) == 0 && len(databaseRoute.Collection) == 0 {
 				return databaseRouteTableOrCollectionNotDefinedError
 			}
 			if len(databaseRoute.Mapping) == 0 {
