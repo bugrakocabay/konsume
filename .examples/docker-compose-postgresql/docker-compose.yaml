@@ -1,0 +1,37 @@
+version: '3.7'
+
+services:
+  konsume:
+    image: local/konsume:latest
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_started
+    environment:
+      KONSUME_CONFIG_PATH: /config/config.yaml
+    volumes:
+      - ./config.yaml:/config/config.yaml
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: mynewdatabase

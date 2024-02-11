@@ -11,13 +11,14 @@ import (
 
 	"github.com/bugrakocabay/konsume/pkg/common"
 	"github.com/bugrakocabay/konsume/pkg/config"
+	"github.com/bugrakocabay/konsume/pkg/database"
 	"github.com/bugrakocabay/konsume/pkg/metrics"
 	"github.com/bugrakocabay/konsume/pkg/queue"
 	"github.com/bugrakocabay/konsume/pkg/requester"
 )
 
 // StartConsumers starts the consumers for all queues
-func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueConsumer, providers map[string]*config.ProviderConfig) error {
+func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueConsumer, providers map[string]*config.ProviderConfig, databases map[string]database.Database) error {
 	var wg sync.WaitGroup
 
 	for _, qCfg := range cfg.Queues {
@@ -34,10 +35,10 @@ func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueC
 		wg.Add(1)
 		go func(c queue.MessageQueueConsumer, qc *config.QueueConfig, pc *config.ProviderConfig) {
 			defer wg.Done()
-			if err := connectWithRetry(c, pc); err != nil {
+			if err := connectProviderWithRetry(c, pc); err != nil {
 				return
 			}
-			if err := listenAndProcess(c, qc, cfg.Metrics); err != nil {
+			if err := listenAndProcess(c, qc, cfg.Metrics, databases); err != nil {
 				log.Printf("Failed to start consumer for queue %s: %s", qc.Name, err)
 			}
 		}(consumer, qCfg, providerCfg)
@@ -48,14 +49,17 @@ func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueC
 }
 
 // StopConsumers kills the connections of the consumers
-func StopConsumers(consumers map[string]queue.MessageQueueConsumer) {
+func StopConsumers(consumers map[string]queue.MessageQueueConsumer, databases map[string]database.Database) {
 	for _, c := range consumers {
 		c.Close()
 	}
+	for _, db := range databases {
+		db.Close()
+	}
 }
 
-// connectWithRetry tries to connect to the queue with the given consumer
-func connectWithRetry(consumer queue.MessageQueueConsumer, cfg *config.ProviderConfig) error {
+// connectProviderWithRetry tries to connect to the queue with the given consumer
+func connectProviderWithRetry(consumer queue.MessageQueueConsumer, cfg *config.ProviderConfig) error {
 	var err error
 	err = consumer.Connect()
 	if err != nil {

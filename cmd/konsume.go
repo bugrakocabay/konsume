@@ -6,9 +6,11 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/bugrakocabay/konsume/pkg/common"
 	"github.com/bugrakocabay/konsume/pkg/config"
+	"github.com/bugrakocabay/konsume/pkg/database"
 	"github.com/bugrakocabay/konsume/pkg/metrics"
 	"github.com/bugrakocabay/konsume/pkg/queue"
 	"github.com/bugrakocabay/konsume/pkg/queue/activemq"
@@ -31,12 +33,16 @@ func Execute() {
 	providerMap := make(map[string]*config.ProviderConfig)
 
 	initProviders(cfg, consumerMap, providerMap)
+	databaseMap, err := initDatabases(cfg)
+	if err != nil {
+		log.Fatalf("Failed to initialize databases: %s", err)
+	}
 	if cfg.Metrics != nil && cfg.Metrics.Enabled {
 		metrics.InitMetrics(cfg.Metrics)
 	}
 
 	go func() {
-		if err = runner.StartConsumers(cfg, consumerMap, providerMap); err != nil {
+		if err = runner.StartConsumers(cfg, consumerMap, providerMap, databaseMap); err != nil {
 			log.Fatalf("Failed to start consumerMap: %s", err)
 		}
 	}()
@@ -44,7 +50,7 @@ func Execute() {
 	signalChannel := setupSignalHandling()
 	waitForShutdown(signalChannel)
 
-	runner.StopConsumers(consumerMap)
+	runner.StopConsumers(consumerMap, databaseMap)
 
 	slog.Info("Shut down gracefully")
 }
@@ -87,6 +93,32 @@ func initProviders(cfg *config.Config, consumers map[string]queue.MessageQueueCo
 			log.Fatalf("Unknown queue source: %s", provider.Type)
 		}
 	}
+}
+
+func initDatabases(cfg *config.Config) (map[string]database.Database, error) {
+	dbMap := make(map[string]database.Database)
+	for _, dbConfig := range cfg.Databases {
+		db, err := database.LoadDatabasePlugin(dbConfig.Type)
+		if err != nil {
+			slog.Error("Failed to load database plugin", "type", dbConfig.Type, "error", err)
+			return nil, err
+		}
+		if err = db.Connect(dbConfig.ConnectionString); err != nil {
+			slog.Error("Failed to connect to database", "type", dbConfig.Type, "error", err)
+			if dbConfig.Retry > 0 {
+				for i := 1; i <= dbConfig.Retry; i++ {
+					time.Sleep(time.Duration(5) * time.Second)
+					slog.Info("Retrying to connect to database", "retry", i)
+					if err = db.Connect(dbConfig.ConnectionString); err == nil {
+						break
+					}
+				}
+			}
+			return nil, err
+		}
+		dbMap[dbConfig.Name] = db
+	}
+	return dbMap, nil
 }
 
 // setupSignalHandling configures the signal handling for os.Interrupt and syscall.SIGTERM.

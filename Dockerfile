@@ -1,11 +1,13 @@
-FROM golang:alpine as builder
-RUN apk --update add ca-certificates
+FROM golang:1.21.5-alpine as builder
+RUN apk add --no-cache build-base git binutils-gold
 WORKDIR /app
 COPY . ./
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o konsume .
+RUN go build -buildmode=plugin -o postgres.so ./plugin/postgresql/postgresql.go
+RUN GOOS=linux go build -a -o konsume .
 
-FROM scratch
+FROM alpine:3.14
 WORKDIR /root/
 COPY --from=builder /app/konsume .
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /app/postgres.so ./plugins/
+RUN apk add --no-cache ca-certificates
 ENTRYPOINT ["./konsume"]

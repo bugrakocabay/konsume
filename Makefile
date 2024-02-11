@@ -7,7 +7,7 @@ GOTEST=go test
 GOGET=go get
 GORUN=go run
 
-.PHONY: all build test clean run deps
+.PHONY: all build test clean run deps plugin_postgres
 
 all: test build
 
@@ -26,3 +26,8 @@ run:
 
 deps:
 	$(GOGET) ./...
+
+plugin_postgres:
+	$(GOBUILD) -buildmode=plugin -o postgres.so ./plugin/postgresql/postgresql.go
+
+start: plugin_postgres run
