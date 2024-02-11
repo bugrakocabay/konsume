@@ -1,0 +1,29 @@
+log: json
+debug: true
+
+providers:
+  - name: "rabbit-queue"
+    type: "rabbitmq"
+    retry: 5
+    amqp-config:
+      host: "rabbitmq"
+      port: 5672
+      username: "user"
+      password: "password"
+
+databases:
+  - name: "sql-database"
+    type: "postgresql"
+    connection-string: "postgres://postgres:password@postgres:5432/db_name?sslmode=disable"
+    retry: 3
+
+queues:
+  - name: "queue-for-rabbit"
+    provider: "rabbit-queue"
+    database-routes:
+      - name: "sql-database-route"
+        provider: "sql-database"
+        table: "dummy_table"
+        mapping:
+          userName: "name"
+          some-key: "some_column"
