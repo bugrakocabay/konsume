@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21.5'
+
+      - name: Build Application
+        run: |
+          GOOS=linux go build -o konsume .
+
+      - name: Build Plugins
+        run: |
+          GOOS=linux go build -buildmode=plugin -o postgres.so ./plugin/postgresql/postgresql.go
+          mkdir -p plugins
+          mv postgres.so plugins/
+
+      - name: Archive Release Artifacts
+        run: |
+          tar -czvf konsume-${{ github.ref }}.tar.gz konsume plugins
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./konsume-${{ github.ref }}.tar.gz
+          asset_name: konsume-${{ github.ref }}.tar.gz
+          asset_content_type: application/gzip
