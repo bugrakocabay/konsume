@@ -1,42 +1,40 @@
-name: Release
+name: Release Artifacts
 
 on:
   release:
     types: [published]
 
 jobs:
-  build-and-release:
+  build-and-upload-assets:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v2
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v2
         with:
           go-version: '1.21.5'
 
       - name: Build Application
-        run: |
-          GOOS=linux go build -o konsume .
+        run: GOOS=linux go build -o konsume .
 
       - name: Build Plugins
         run: |
-          GOOS=linux go build -buildmode=plugin -o postgres.so ./plugin/postgresql/postgresql.go
-          mkdir -p plugins
-          mv postgres.so plugins/
+          GOOS=linux go build -buildmode=plugin -o plugins/postgres.so ./plugin/postgresql/postgresql.go
 
       - name: Archive Release Artifacts
-        run: |
-          tar -czvf konsume.tar.gz konsume plugins
+        run: tar -czvf konsume-${{ github.event.release.tag_name }}.tar.gz konsume plugins
 
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
+      - name: Get release upload URL
+        id: get_upload_url
+        run: |
+          upload_url=$(gh release view ${{ github.event.release.tag_name }} --json uploadUrl -q .uploadUrl)
+          echo "::set-output name=upload_url::$upload_url"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./konsume.tar.gz
-          asset_name: konsume.tar.gz
-          asset_content_type: application/gzip
+
+      - name: Upload Release Asset
+        run: |
+          gh release upload ${{ github.event.release.tag_name }} ./konsume-${{ github.event.release.tag_name }}.tar.gz --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
