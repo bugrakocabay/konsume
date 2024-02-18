@@ -15,7 +15,7 @@ func TestListenAndProcess(t *testing.T) {
 		ConnectFunc: func() error { return nil },
 		ConsumeFunc: func(queueName string, handler func(msg []byte) error) error { return nil },
 	}
-	err := listenAndProcess(mockConsumer, qCfg, nil)
+	err := listenAndProcess(mockConsumer, qCfg, nil, nil)
 	if err != nil {
 		t.Errorf("listenAndProcess() error = %v, wantErr %v", err, nil)
 	}
@@ -30,7 +30,7 @@ func TestListenAndProcess_ConnectFails(t *testing.T) {
 	mockConsumer := &MockMessageQueueConsumer{
 		ConnectFunc: func() error { return errors.New("connection failed") },
 	}
-	err := listenAndProcess(mockConsumer, qCfg, nil)
+	err := listenAndProcess(mockConsumer, qCfg, nil, nil)
 	if err == nil {
 		t.Error("Expected an error when connection fails, but got nil")
 	}
@@ -45,7 +45,7 @@ func TestListenAndProcess_ConsumptionFails(t *testing.T) {
 			return errors.New("consumption failed")
 		},
 	}
-	err := listenAndProcess(mockConsumer, qCfg, nil)
+	err := listenAndProcess(mockConsumer, qCfg, nil, nil)
 	if err == nil {
 		t.Error("Expected an error when consumption fails, but got nil")
 	}
@@ -60,7 +60,7 @@ func TestListenAndProcess_SuccessfulConsumption(t *testing.T) {
 			return handler([]byte("{\"key\":\"value\"}"))
 		},
 	}
-	err := listenAndProcess(mockConsumer, qCfg, nil)
+	err := listenAndProcess(mockConsumer, qCfg, nil, nil)
 	if err != nil {
 		t.Errorf("Expected no error, but got: %v", err)
 	}
@@ -77,7 +77,7 @@ func TestListenAndProcess_InvalidMessageFormat(t *testing.T) {
 			return handler([]byte("invalid message"))
 		},
 	}
-	_ = listenAndProcess(mockConsumer, qCfg, nil) // Error is not expected to be returned
+	_ = listenAndProcess(mockConsumer, qCfg, nil, nil) // Error is not expected to be returned
 
 	if !handlerCalled {
 		t.Error("Expected handler to be called, but it was not")
@@ -100,7 +100,7 @@ func TestListenAndProcess_RouteHandling(t *testing.T) {
 			Query:  map[string]string{"param": "value"},
 		},
 	}
-	err := listenAndProcess(mockConsumer, qCfg1, nil)
+	err := listenAndProcess(mockConsumer, qCfg1, nil, nil)
 	if err != nil {
 		t.Errorf("listenAndProcess() with non-empty body returned error: %v", err)
 	}
@@ -114,7 +114,7 @@ func TestListenAndProcess_RouteHandling(t *testing.T) {
 			Query:  map[string]string{"param": "value"},
 		},
 	}
-	err = listenAndProcess(mockConsumer, qCfg2, nil)
+	err = listenAndProcess(mockConsumer, qCfg2, nil, nil)
 	if err != nil {
 		t.Errorf("listenAndProcess() with empty body returned error: %v", err)
 	}
@@ -138,7 +138,7 @@ func TestListenAndProcess_PrepareRequestBody_Success(t *testing.T) {
 		},
 	}
 
-	err := listenAndProcess(mockConsumer, qCfg, nil)
+	err := listenAndProcess(mockConsumer, qCfg, nil, nil)
 	if err != nil {
 		t.Errorf("listenAndProcess() with valid body returned error: %v", err)
 	}

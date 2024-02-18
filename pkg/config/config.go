@@ -32,6 +32,9 @@ type Config struct {
 
 	// Log is the format of the log
 	Log string `yaml:"log,omitempty"`
+
+	// Databases is the configuration for the database connections
+	Databases []*DatabaseConfig `yaml:"databases"`
 }
 
 // LoadConfig loads the configuration from the config.yaml file
@@ -82,8 +85,15 @@ func (c *Config) ValidateAll() error {
 		}
 	}
 
+	for _, d := range c.Databases {
+		err := validateDatabaseConfig(d)
+		if err != nil {
+			return err
+		}
+	}
+
 	for _, q := range c.Queues {
-		err := q.validateQueue(c.Providers)
+		err := q.validateQueue(c.Providers, c.Databases)
 		if err != nil {
 			return err
 		}

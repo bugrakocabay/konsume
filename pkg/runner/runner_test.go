@@ -78,7 +78,7 @@ func TestStartConsumers(t *testing.T) {
 	providerMap := make(map[string]*config.ProviderConfig)
 	providerMap["rabbitmq"] = &config.ProviderConfig{Name: "rabbitmq", Type: "amqp"}
 
-	err := StartConsumers(cfg, consumers, providerMap)
+	err := StartConsumers(cfg, consumers, providerMap, nil)
 	if err != nil {
 		t.Errorf("StartConsumers() error = %v, wantErr %v", err, nil)
 	}
@@ -108,7 +108,7 @@ func TestStartConsumersMultipleQueues(t *testing.T) {
 	providerMap := make(map[string]*config.ProviderConfig)
 	providerMap["rabbitmq"] = &config.ProviderConfig{Name: "rabbitmq", Type: "amqp"}
 
-	err := StartConsumers(cfg, consumers, providerMap)
+	err := StartConsumers(cfg, consumers, providerMap, nil)
 	if err == nil || !strings.Contains(err.Error(), "no consumer found for provider: unknown") {
 		t.Errorf("Expected error for missing provider, got %v", err)
 	}
@@ -154,10 +154,10 @@ func TestConnectWithRetry(t *testing.T) {
 				Retry: tt.retryCount,
 			}
 
-			err := connectWithRetry(mockConsumer, cfg)
+			err := connectProviderWithRetry(mockConsumer, cfg)
 
 			if (err != nil) != tt.expectError {
-				t.Errorf("connectWithRetry() error = %v, wantErr %v", err, tt.expectError)
+				t.Errorf("connectProviderWithRetry() error = %v, wantErr %v", err, tt.expectError)
 			}
 			if mockConsumer.ConnectCalled != tt.expectConnectCall {
 				t.Errorf("Expected Connect to be called = %v, got %v", tt.expectConnectCall, mockConsumer.ConnectCalled)
@@ -169,7 +169,7 @@ func TestConnectWithRetry(t *testing.T) {
 func TestStartConsumersNoQueues(t *testing.T) {
 	cfg := &config.Config{}
 
-	err := StartConsumers(cfg, nil, nil)
+	err := StartConsumers(cfg, nil, nil, nil)
 	if err != nil {
 		t.Errorf("Expected no error for no queues, got %v", err)
 	}

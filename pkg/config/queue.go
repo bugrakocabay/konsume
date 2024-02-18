@@ -17,12 +17,17 @@ var (
 	intervalNotDefinedError   = errors.New("interval not defined")
 	invalidStrategyError      = errors.New("invalid strategy")
 
-	noRoutesDefinedError                 = errors.New("no routes defined")
 	routeNameNotDefinedError             = errors.New("route name not defined")
 	urlNotDefinedError                   = errors.New("url not defined")
 	bodyNotDefinedError                  = errors.New("when using graphql type, body must be defined")
 	invalidBodyForGraphQLError           = errors.New("when using graphql type, body must contain query or mutation")
 	bodyNotContainsStringForGraphQLError = errors.New("when using graphql type, body must contain string for query or mutation")
+
+  databaseRouteNameNotDefinedError              = errors.New("database route name not defined")
+	databaseRouteProviderNotDefinedError          = errors.New("database route provider not defined")
+	databaseRouteProviderDoesNotExistError        = errors.New("database route provider does not exist in databases list")
+	databaseRouteTableOrCollectionNotDefinedError = errors.New("database route table or collection not defined")
+	dataBaseRouteMappingNotDefinedError           = errors.New("database route mapping not defined")
 )
 
 // QueueConfig is the main configuration information needed to consume a queue
@@ -38,6 +43,9 @@ type QueueConfig struct {
 
 	// Routes is the list of routes that will be used to send the messages
 	Routes []*RouteConfig `yaml:"routes"`
+
+	// DatabaseRoutes is the list of databases that will be used to store the messages
+	DatabaseRoutes []*DatabaseRouteConfig `yaml:"database-routes,omitempty"`
 }
 
 // RetryConfig is the main configuration information needed to retry a message
@@ -85,7 +93,25 @@ type RouteConfig struct {
 	Timeout time.Duration `yaml:"timeout,omitempty"`
 }
 
-func (queue *QueueConfig) validateQueue(providers []*ProviderConfig) error {
+// DatabaseRouteConfig is the main configuration information needed to store a message in a database
+type DatabaseRouteConfig struct {
+	// Name is the name of the database route
+	Name string `yaml:"name"`
+
+	// Provider is the name of the provider database
+	Provider string `yaml:"provider"`
+
+  // Table is the name of the table in a SQL database
+	Table string `yaml:"table,omitempty"`
+
+	// Collection is the name of the collection in a NoSQL database
+	Collection string `yaml:"collection,omitempty"`
+
+	// Mapping is the mapping of the message to the database
+	Mapping map[string]string `yaml:"mapping"`
+}
+
+func (queue *QueueConfig) validateQueue(providers []*ProviderConfig, databases []*DatabaseConfig) error {
 	if len(queue.Name) == 0 {
 		return queueNameNotDefinedError
 	}
@@ -125,9 +151,7 @@ func (queue *QueueConfig) validateQueue(providers []*ProviderConfig) error {
 		}
 	}
 
-	if len(queue.Routes) == 0 {
-		return noRoutesDefinedError
-	} else {
+	if len(queue.Routes) > 0 {
 		for _, route := range queue.Routes {
 			if len(route.Name) == 0 {
 				return routeNameNotDefinedError
@@ -171,6 +195,33 @@ func (queue *QueueConfig) validateQueue(providers []*ProviderConfig) error {
 			if route.Timeout == 0 {
 				slog.Debug("Route timeout not defined, using default timeout 10 seconds", "route", route.Name)
 				route.Timeout = 10 * time.Second
+			}
+		}
+	}
+
+	if len(queue.DatabaseRoutes) > 0 {
+		for _, databaseRoute := range queue.DatabaseRoutes {
+			if len(databaseRoute.Name) == 0 {
+				return databaseRouteNameNotDefinedError
+			}
+			if len(databaseRoute.Provider) == 0 {
+				return databaseRouteProviderNotDefinedError
+			}
+			databaseExists := false
+			for _, database := range databases {
+				if database.Name == databaseRoute.Provider {
+					databaseExists = true
+					break
+				}
+			}
+			if !databaseExists {
+				return databaseRouteProviderDoesNotExistError
+			}
+      if len(databaseRoute.Table) == 0 && len(databaseRoute.Collection) == 0 {
+				return databaseRouteTableOrCollectionNotDefinedError
+			}
+			if len(databaseRoute.Mapping) == 0 {
+				return dataBaseRouteMappingNotDefinedError
 			}
 		}
 	}
