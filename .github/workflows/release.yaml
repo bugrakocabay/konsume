@@ -30,7 +30,8 @@ jobs:
 
       - name: Archive Release Artifacts
         run: |
-          tar -czvf konsume-${{ github.ref }}.tar.gz konsume plugins
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          tar -czvf konsume-${TAG_NAME}.tar.gz konsume plugins
 
       - name: Create Release
         id: create_release
@@ -49,6 +50,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./konsume-${{ github.ref }}.tar.gz
-          asset_name: konsume-${{ github.ref }}.tar.gz
+          asset_path: ./konsume-${GITHUB_REF#refs/tags/}.tar.gz
+          asset_name: konsume-${GITHUB_REF#refs/tags/}.tar.gz
           asset_content_type: application/gzip
