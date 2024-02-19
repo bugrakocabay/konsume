@@ -6,7 +6,16 @@ on:
 
 jobs:
   build-and-upload-assets:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        goos: [linux, darwin]
+        include:
+          - os: ubuntu-latest
+            artifact_suffix: linux
+          - os: macos-latest
+            artifact_suffix: macos
     steps:
       - uses: actions/checkout@v2
 
@@ -16,25 +25,23 @@ jobs:
           go-version: '1.21.5'
 
       - name: Build Application
-        run: GOOS=linux go build -o konsume .
+        run: GOOS=${{ matrix.goos }} go build -o konsume-${{ matrix.artifact_suffix }}
 
       - name: Build Plugins
         run: |
-          GOOS=linux go build -buildmode=plugin -o plugins/postgres.so ./plugin/postgresql/postgresql.go
+          GOOS=${{ matrix.goos }} go build -buildmode=plugin -o plugins/postgres-${{ matrix.artifact_suffix }}.so ./plugin/postgresql/postgresql.go
 
       - name: Archive Release Artifacts
-        run: tar -czvf konsume-${{ github.event.release.tag_name }}.tar.gz konsume plugins
-
-      - name: Get release upload URL
-        id: get_upload_url
-        run: |
-          upload_url=$(gh release view ${{ github.event.release.tag_name }} --json uploadUrl -q .uploadUrl)
-          echo "::set-output name=upload_url::$upload_url"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: tar -czvf konsume-${{ github.event.release.tag_name }}-${{ matrix.artifact_suffix }}.tar.gz konsume-${{ matrix.artifact_suffix }} plugins
 
       - name: Upload Release Asset
         run: |
           gh release upload ${{ github.event.release.tag_name }} ./konsume-${{ github.event.release.tag_name }}.tar.gz --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./konsume-${{ github.event.release.tag_name }}-${{ matrix.artifact_suffix }}.tar.gz
+          asset_name: konsume-${{ github.event.release.tag_name }}-${{ matrix.artifact_suffix }}.tar.gz
+          asset_content_type: application/gzip
+          
