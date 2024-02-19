@@ -35,7 +35,8 @@ jobs:
         run: tar -czvf konsume-${{ github.event.release.tag_name }}-${{ matrix.artifact_suffix }}.tar.gz konsume-${{ matrix.artifact_suffix }} plugins
 
       - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
+        run: |
+          gh release upload ${{ github.event.release.tag_name }} ./konsume-${{ github.event.release.tag_name }}.tar.gz --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -43,3 +44,4 @@ jobs:
           asset_path: ./konsume-${{ github.event.release.tag_name }}-${{ matrix.artifact_suffix }}.tar.gz
           asset_name: konsume-${{ github.event.release.tag_name }}-${{ matrix.artifact_suffix }}.tar.gz
           asset_content_type: application/gzip
+          
