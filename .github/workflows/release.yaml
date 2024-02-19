@@ -17,10 +17,10 @@ jobs:
           - os: macos-latest
             artifact_suffix: macos
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: '1.21.5'
 
@@ -29,10 +29,10 @@ jobs:
 
       - name: Build Plugins
         run: |
-          GOOS=${{ matrix.goos }} go build -buildmode=plugin -o plugins/postgres-${{ matrix.artifact_suffix }}.so ./plugin/postgresql/postgresql.go
+          GOOS=${{ matrix.goos }} go build -buildmode=plugin -o plugins/postgres-${{ matrix.goos }}.so ./plugin/postgresql/postgresql.go
 
       - name: Archive Release Artifacts
-        run: tar -czvf konsume-${{ github.event.release.tag_name }}-${{ matrix.artifact_suffix }}.tar.gz konsume-${{ matrix.artifact_suffix }} plugins
+        run: tar -czvf konsume-${{ github.event.release.tag_name }}-${{ matrix.matrix.goos }}.tar.gz konsume-${{ matrix.goos }} plugins
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
@@ -40,6 +40,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./konsume-${{ github.event.release.tag_name }}-${{ matrix.artifact_suffix }}.tar.gz
-          asset_name: konsume-${{ github.event.release.tag_name }}-${{ matrix.artifact_suffix }}.tar.gz
+          asset_path: ./konsume-${{ github.event.release.tag_name }}-${{ matrix.matrix.goos }}.tar.gz
+          asset_name: konsume-${{ github.event.release.tag_name }}-${{ matrix.matrix.goos }}.tar.gz
           asset_content_type: application/gzip
