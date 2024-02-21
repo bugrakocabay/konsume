@@ -25,7 +25,7 @@ jobs:
           go-version: '1.21.5'
 
       - name: Build Application
-        run: GOOS=${{ matrix.goos }} go build -o konsume-${{ matrix.artifact_suffix }}
+        run: GOOS=${{ matrix.goos }} go build -o konsume-${{ matrix.matrix.goos }}
 
       - name: Build Plugins
         run: |
