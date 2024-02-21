@@ -32,7 +32,7 @@ jobs:
           GOOS=${{ matrix.goos }} go build -buildmode=plugin -o plugins/postgres-${{ matrix.goos }}.so ./plugin/postgresql/postgresql.go
 
       - name: Archive Release Artifacts
-        run: tar -czvf konsume-${{ github.event.release.tag_name }}-${{ matrix.matrix.goos }}.tar.gz konsume-${{ matrix.goos }} plugins
+        run: tar -czvf konsume-${{ github.event.release.tag_name }}-${{ matrix.goos }}.tar.gz konsume-${{ matrix.goos }} plugins
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
@@ -40,6 +40,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./konsume-${{ github.event.release.tag_name }}-${{ matrix.matrix.goos }}.tar.gz
-          asset_name: konsume-${{ github.event.release.tag_name }}-${{ matrix.matrix.goos }}.tar.gz
+          asset_path: ./konsume-${{ github.event.release.tag_name }}-${{ matrix.goos }}.tar.gz
+          asset_name: konsume-${{ github.event.release.tag_name }}-${{ matrix.goos }}.tar.gz
           asset_content_type: application/gzip
