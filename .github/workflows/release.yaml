@@ -9,12 +9,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        goos: [linux, darwin]
         include:
           - os: ubuntu-latest
+            goos: linux
             artifact_suffix: linux
           - os: macos-latest
+            goos: darwin
             artifact_suffix: macos
     steps:
       - uses: actions/checkout@v4
