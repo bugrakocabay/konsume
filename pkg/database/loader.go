@@ -29,9 +29,9 @@ func getPluginPath(dbType string) string {
 
 	switch runtime.GOOS {
 	case "linux":
-		return fmt.Sprintf("/root/plugins/%s_linux.so", pluginFile)
+		return fmt.Sprintf("/root/plugins/%s-linux.so", pluginFile)
 	case "darwin":
-		return fmt.Sprintf("/root/plugins/%s_darwin.so", pluginFile)
+		return fmt.Sprintf("/root/plugins/%s-darwin.so", pluginFile)
 	default:
 		return ""
 	}
