@@ -1524,7 +1524,7 @@ queues:
 				}
 			}
 
-			os.Setenv("KONSUME_CONFIG_PATH", configFile)
+			os.Setenv(common.KonsumeConfigPath, configFile)
 			cfg, err := LoadConfig()
 			if !errors.Is(err, tc.expectedError) {
 				t.Errorf("expected error %v, got %v", tc.expectedError, err)
