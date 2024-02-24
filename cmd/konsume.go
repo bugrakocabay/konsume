@@ -36,6 +36,7 @@ func Execute() {
 	databaseMap, err := initDatabases(cfg)
 	if err != nil {
 		slog.Error("Failed to initialize databases", "error", err)
+		return
 	}
 	if cfg.Metrics != nil && cfg.Metrics.Enabled {
 		metrics.InitMetrics(cfg.Metrics)
