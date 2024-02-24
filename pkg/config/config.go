@@ -5,6 +5,8 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/bugrakocabay/konsume/pkg/common"
+
 	"gopkg.in/yaml.v3"
 )
 
@@ -39,7 +41,7 @@ type Config struct {
 
 // LoadConfig loads the configuration from the config.yaml file
 func LoadConfig() (*Config, error) {
-	configPath := os.Getenv("KONSUME_CONFIG_PATH")
+	configPath := os.Getenv(common.KonsumeConfigPath)
 	if len(configPath) == 0 {
 		slog.Info("No configuration path defined, using default path /config/config.yaml")
 		configPath = "/config/config.yaml"
