@@ -1,4 +1,4 @@
-log: json
+log: text
 debug: true
 
 providers:
@@ -14,7 +14,7 @@ providers:
 databases:
   - name: "sql-database"
     type: "postgresql"
-    connection-string: "postgres://postgres:password@postgres:5432/db_name?sslmode=disable"
+    connection-string: "postgres://postgres:mysecretpassword@postgres:5432/mynewdatabase?sslmode=disable"
     retry: 3
 
 queues:
