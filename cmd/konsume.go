@@ -35,7 +35,8 @@ func Execute() {
 	initProviders(cfg, consumerMap, providerMap)
 	databaseMap, err := initDatabases(cfg)
 	if err != nil {
-		log.Fatalf("Failed to initialize databases: %s", err)
+		slog.Error("Failed to initialize databases", "error", err)
+		return
 	}
 	if cfg.Metrics != nil && cfg.Metrics.Enabled {
 		metrics.InitMetrics(cfg.Metrics)
@@ -43,7 +44,7 @@ func Execute() {
 
 	go func() {
 		if err = runner.StartConsumers(cfg, consumerMap, providerMap, databaseMap); err != nil {
-			log.Fatalf("Failed to start consumerMap: %s", err)
+			slog.Error("Failed to start consumers", "error", err)
 		}
 	}()
 
@@ -100,7 +101,6 @@ func initDatabases(cfg *config.Config) (map[string]database.Database, error) {
 	for _, dbConfig := range cfg.Databases {
 		db, err := database.LoadDatabasePlugin(dbConfig.Type)
 		if err != nil {
-			slog.Error("Failed to load database plugin", "type", dbConfig.Type, "error", err)
 			return nil, err
 		}
 		if err = db.Connect(dbConfig.ConnectionString); err != nil {

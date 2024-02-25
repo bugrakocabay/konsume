@@ -21,3 +21,8 @@ const (
 	DatabaseTypePostgresql = "postgresql"
 	DatabaseTypeMongoDB    = "mongodb"
 )
+
+const (
+	KonsumeConfigPath = "KONSUME_CONFIG_PATH"
+	KonsumePluginPath = "KONSUME_PLUGIN_PATH"
+)

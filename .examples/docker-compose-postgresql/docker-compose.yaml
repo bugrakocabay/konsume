@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   konsume:
-    image: local/konsume:latest
+    image: bugrakocabay/konsume:latest
     depends_on:
       rabbitmq:
         condition: service_healthy
