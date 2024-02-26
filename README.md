@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  konsume is a powerful and flexible tool designed to consume messages from various message queues like RabbitMQ and Kafka and perform HTTP requests based on configurations.
+  konsume is a powerful and flexible tool designed to consume messages from various message queues like RabbitMQ and Kafka and perform data-driven actions like HTTP requests and insertions into databases based on predefined configurations.
 </p>
 
 <p align="center">
@@ -29,20 +29,24 @@
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Configuration](#configuration)
 - [FAQ](#faq)
 - [Contributing](#contributing)
 
 ## Overview
 
-**TLDR;** If you want to consume messages from RabbitMQ or Kafka and perform HTTP requests based on configurations, konsume is for you.
+**TLDR;** If you want to consume messages from message queues such as RabbitMQ or Kafka and perform HTTP requests or insert data to a database based on configurations, konsume is for you.
 
-komsume is a tool that easily connects message queues like RabbitMQ and Kafka with web services, automating data-driven HTTP requests. It bridges complex messaging systems and web APIs, enabling you to create workflows where queue messages automatically trigger web requests. Its flexible setup, including various retry options and customizable request formats, suits a range of uses, from basic data transfers to intricate processing tasks.
+komsume is a tool that easily connects message queues like RabbitMQ and Kafka with web services, automating data-driven actions. It bridges complex messaging systems and web APIs or databases. Its flexible setup, including various retry options and customizable request formats, suits a range of uses, from basic data transfers to intricate processing tasks.
+
+<p align="center">
+    <img src=".github/assets/diagram.png" alt="konsume diagram" />
+</p>
 
 ## Features
 
 - **Message Consumption**: Efficiently consumes messages from specified queues.
 - **Dynamic HTTP Requests**: Sends HTTP requests based on message content and predefined configurations.
+- **Database Insertions**: Inserts data into databases based on message content and predefined configurations.
 - **Retry Strategies**: Supports fixed, exponential, and random retry strategies for handling request failures.
 - **Request Body Templating**: Dynamically constructs request bodies using templates with values extracted from incoming messages.
 - **Custom HTTP Headers**: Allows setting custom HTTP headers for outgoing requests.
@@ -51,24 +55,22 @@ komsume is a tool that easily connects message queues like RabbitMQ and Kafka wi
 
 ## Installation
 
-Easiest way to install konsume is to run via Docker. konsume will look for a configuration file named `config.yaml` in the `/config` directory. Or you can set the path of the configuration file using the `KONSUME_CONFIG_PATH` environment variable.
+Easiest way to install konsume is to run via Docker. 
 
 ```bash
 docker run -d --name konsume -v /path/to/config.yaml:/config/config.yaml bugrakocabay/konsume:latest
 ```
 
-Alternatively, you can download the latest binary with the go installer:
-
-```bash
-go install github.com/bugrakocabay/konsume@latest
-```
+Alternatively, you can download the latest binary from the [releases](https://github.com/bugrakocabay/konsume/releases) page and run it on your machine.
 
 ## Usage
 
-konsume depends on a YAML configuration file for defining queues, routes, and behaviors. There are two main sections in the configuration file: `providers` and `queues`. In the `providers` section, you can define the message queue providers that konsume will use to consume messages. In the `queues` section, you can define the queues that konsume will consume messages from and the routes that konsume will use to send HTTP requests.
-You can also find detailed usage examples in the [examples](.examples) directory.
+konsume depends on a YAML configuration file for defining queues, routes, and behaviors. By default, konsume looks for a file named `config.yaml` in the `/config` directory. Alternatively, you can specify the environment variable `KONSUME_CONFIG_PATH` to point to your configuration file.
 
-**A simple usage for konsume with RabbitMQ:**
+<br>📜 <b>Checkout the [CONFIGURATION.md](./CONFIGURATION.md) for detailed information about the configuration parameters.
+<br>💡 You can also find detailed usage examples in the [examples](.examples) directory. </b>
+
+**A simple usage for konsume to send HTTP requests with RabbitMQ:**
 
 ```yaml
 providers:
@@ -89,7 +91,7 @@ queues:
         url: 'https://someurl.com'
 ```
 
-**A simple usage for konsume with Kafka:**
+**A simple usage for konsume to insert into a database with Kafka:**
 
 ```yaml
 providers:
@@ -100,76 +102,39 @@ providers:
         - 'localhost:9092'
       topic: 'your_topic_name'
       group: 'group1'
+databases:
+  - name: "sql-database"
+    type: "postgresql"
+    connection-string: "postgres://postgres:password@host:5432/dbname"
 queues:
-  - name: 'queue-for-kafka'
-    provider: 'kafka-queue'
-    routes:
-      - name: 'ServiceA_Queue2'
-        type: 'REST'
-        method: 'POST'
-        url: 'https://someurl.com'
+  - name: "queue-for-kafka"
+    provider: "kafka-queue"
+    database-routes:
+      - name: "sql-database-route"
+        provider: "sql-database"
+        table: "some_table"
+        mapping:
+          userName: "name"
+          some-key: "value"
 ```
-
-## Configuration
-
-| Parameter                         | Description                                                                                                      | Is Required?                        |
-|:----------------------------------|:-----------------------------------------------------------------------------------------------------------------|:------------------------------------|
-| `debug`                           | Enable debug logging level                                                                                       | no                                  |
-| `providers`                       | List of configuration for queue sources                                                                          | yes                                 |
-| `providers.name`                  | Name of the queue source                                                                                         | yes                                 |
-| `providers.type`                  | Type of the queue source. Supported types are `rabbitmq`, `kafka` and `activemq`                                 | yes                                 |
-| `providers.retry`                 | Amount of times to retry connecting to queue source                                                              | no                                  |
-| `providers.amqp-config`           | Configuration for RabbitMQ                                                                                       | yes (if type is rabbitmq)           |
-| `providers.amqp-config.host`      | Host of the RabbitMQ server                                                                                      | yes (if type is rabbitmq)           |
-| `providers.amqp-config.port`      | Port of the RabbitMQ server                                                                                      | yes (if type is rabbitmq)           |
-| `providers.amqp-config.username`  | Username for the RabbitMQ server                                                                                 | yes (if type is rabbitmq)           |
-| `providers.amqp-config.password`  | Password for the RabbitMQ server                                                                                 | yes (if type is rabbitmq)           |
-| `providers.kafka-config`          | Configuration for Kafka                                                                                          | yes (if type is kafka)              |
-| `providers.kafka-config.brokers`  | List of Kafka brokers                                                                                            | yes (if type is kafka)              |
-| `providers.kafka-config.topic`    | Topic name for Kafka                                                                                             | yes (if type is kafka)              |
-| `providers.kafka-config.group`    | Group name for Kafka                                                                                             | yes (if type is kafka)              |
-| `providers.stomp-config`          | Configuration for ActiveMQ                                                                                       | yes (if type is activemq)           |
-| `providers.stomp-config.host`     | Host of the ActiveMQ server                                                                                      | yes (if type is activemq)           |
-| `providers.stomp-config.port`     | Port of the ActiveMQ server                                                                                      | yes (if type is activemq)           |
-| `providers.stomp-config.username` | Username for the ActiveMQ server                                                                                 | yes (if type is activemq)           |
-| `providers.stomp-config.password` | Password for the ActiveMQ server                                                                                 | yes (if type is activemq)           |
-| `queues`                          | List of configuration for queues                                                                                 | yes                                 |
-| `queues.name`                     | Name of the queue                                                                                                | yes                                 |
-| `queues.provider`                 | Name of the queue source                                                                                         | yes (should match a provider name ) |
-| `queues.retry`                    | Retry mechanism for queue                                                                                        | no                                  |
-| `queues.retry.enabled`            | Flag for enabling/disabling retry mechanism                                                                      | yes (if retry is enabled)           |
-| `queues.retry.strategy`           | Type of the retry mechanism. Supported types are `fixed`, `expo`, and `random`                                   | no (defaults to fixed)              |
-| `queues.retry.max_retries`        | Maximum amount of times that retrying will be triggered                                                          | yes (if retry is enabled)           |
-| `queues.retry.interval`           | Amount of time between retries                                                                                   | yes (if retry is enabled)           |
-| `queues.retry.threshold_status`   | Minimum HTTP status code to trigger retry mechanism, any status code above or equal this will trigger retrying   | no (defaults to 500)                |
-| `queues.routes`                   | List of configuration for routes                                                                                 | yes                                 |
-| `queues.routes.name`              | Name of the route                                                                                                | yes                                 |
-| `queues.routes.type`              | Type of the route.                                                                                               | no (defaults to REST)               |
-| `queues.routes.method`            | HTTP method for the route                                                                                        | no (defaults to POST)               |
-| `queues.routes.url`               | URL for the route                                                                                                | yes                                 |
-| `queues.routes.headers`           | List of headers for the route                                                                                    | no                                  |
-| `queues.routes.body`              | List of key-values to customize body of the request                                                              | no                                  |
-| `queues.routes.query`             | List of key-values to customize query params of the request                                                      | no                                  |
-| `queues.routes.timeout`           | Timeout of the request                                                                                           | no (defaults to 10s)                |
-| `metrics`                         | Configuration for Prometheus metrics                                                                             | no                                  |
-| `metrics.enabled`                 | Flag for enabling/disabling Prometheus metrics                                                                   | no (defaults to false)              |
-| `metrics.port`                    | Port for Prometheus metrics                                                                                      | no (defaults to 8080)               |
-| `metrics.path`                    | Path for Prometheus metrics endpoint                                                                             | no (defaults to /metrics)           |
-| `metrics.threshold-status`        | Minimum HTTP status code to trigger Prometheus metrics, any status code above or equal this will trigger metrics | no (defaults to 500)                |
-| `log`                             | Format type of logging. Available formats are `text` and `json`                                                  | no (defaults to text)               |
 
 ## FAQ
 
 <details>
 <summary> <b>Why konsume?</b> </summary>
 
-Think of konsume as your handy tool for making message queues and web APIs work together like best buddies. It's like having a super-efficient assistant who takes messages from RabbitMQ or Kafka and knows exactly when and how to ping your web services, whether they speak REST or GraphQL. And guess what? If something doesn't go right the first time, konsume keeps trying until it works, thanks to its smart retry strategies. So, whether you're just moving data around or setting up some cool automated workflows, konsume is your go-to for making things simple and reliable.
+Think of konsume as your handy tool for making message queues and other services work together like best buddies. It's like having a super-efficient assistant who takes messages from RabbitMQ or Kafka and knows exactly when and how to insert data into databases or ping your web services, whether they speak REST or GraphQL. And guess what? If something doesn't go right the first time, konsume keeps trying until it works, thanks to its smart retry strategies. So, whether you're just moving data around or setting up some cool automated workflows, konsume is your go-to for making things simple and reliable.
 
 </details>
 
 <details>
 <summary> <b>What message queues does konsume support?</b> </summary>
 Currently konsume supports <b>RabbitMQ</b>, <b>Kafka</b> and <b>ActiveMQ</b>. But it is designed to be easily extensible to support other message queues.
+</details>
+
+<details>
+<summary> <b>What databases does konsume support?</b> </summary>
+Currently konsume only supports <b>Postgres</b>. But it is designed to be easily extensible to support other databases.
 </details>
 
 <details>
@@ -196,6 +161,34 @@ routes:
       userName: '{{name}}'
       eMail: '{{email}}'
     url: 'http://someurl.com'
+```
+
+</details>
+
+<details>
+<summary> <b>How can I dynamically map the values inside a message into columns/fields of a database?</b> </summary>
+In order to dynamically map the values inside a message into columns/fields of a database, you can use the <code>mapping</code> section in the database route configuration. You can define the mapping between the fields of the message and the columns of the database table. For example, if you have a message like this:
+
+```json
+{
+	"name": "John",
+	"email": "john@doe.com"
+}
+```
+
+You can use the <code>mapping</code> section to map the <code>name</code> field of the message to the <code>user_name</code> column of the database table and the <code>email</code> field of the message to the <code>user_email</code> column of the database table.
+
+```yaml
+queues:
+  - name: "queue-for-kafka"
+    provider: "kafka-queue"
+    database-routes:
+      - name: "sql-database-route"
+        provider: "sql-database"
+        table: "some_table"
+        mapping:
+          name: "user_name"
+          email: "user_email"
 ```
 
 </details>
