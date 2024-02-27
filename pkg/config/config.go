@@ -1,51 +1,54 @@
 package config
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"os"
-
-	"github.com/bugrakocabay/konsume/pkg/common"
+	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
 
 var (
-	readConfigFileError      = errors.New("failed to read configuration file")
 	unmarshalConfigFileError = errors.New("failed to unmarshal configuration file")
 	configFileNotFoundError  = errors.New("configuration file not found")
 	noProvidersDefinedError  = errors.New("no providers defined")
 	noQueuesDefinedError     = errors.New("no queues defined")
+	formatNotSupportedError  = errors.New("format not supported")
 )
 
 // Config is the main configuration struct
 type Config struct {
 	// Providers is a list of sources that will be connected to
-	Providers []*ProviderConfig `yaml:"providers"`
+	Providers []*ProviderConfig `yaml:"providers" json:"providers"`
 
 	// Queues is a list of queues that will be consumed
-	Queues []*QueueConfig `yaml:"queues"`
+	Queues []*QueueConfig `yaml:"queues" json:"queues"`
 
 	// Debug is a flag that enables debug logging
-	Debug bool `yaml:"debug"`
+	Debug bool `yaml:"debug" json:"debug"`
 
 	// Metrics is the configuration for the metrics endpoint
-	Metrics *MetricsConfig `yaml:"metrics"`
+	Metrics *MetricsConfig `yaml:"metrics" json:"metrics"`
 
 	// Log is the format of the log
-	Log string `yaml:"log,omitempty"`
+	Log string `yaml:"log,omitempty" json:"log"`
 
 	// Databases is the configuration for the database connections
-	Databases []*DatabaseConfig `yaml:"databases"`
+	Databases []*DatabaseConfig `yaml:"databases" json:"databases"`
 }
 
-// LoadConfig loads the configuration from the config.yaml file
+// LoadConfig loads the configuration from a file which can be either YAML or JSON.
 func LoadConfig() (*Config, error) {
-	configPath := os.Getenv(common.KonsumeConfigPath)
-	if len(configPath) == 0 {
-		slog.Info("No configuration path defined, using default path /config/config.yaml")
+	configPath := os.Getenv("KONSUME_CONFIG_PATH")
+	if configPath == "" {
+		slog.Debug("No configuration path defined, using default path /config/config.yaml")
 		configPath = "/config/config.yaml"
 	}
+
 	slog.Info("Loading configuration from", "path", configPath)
 
 	data, err := os.ReadFile(configPath)
@@ -53,14 +56,23 @@ func LoadConfig() (*Config, error) {
 		if os.IsNotExist(err) {
 			return nil, configFileNotFoundError
 		}
-		return nil, readConfigFileError
+		return nil, fmt.Errorf("error reading config file: %w", err)
 	}
+
 	cfg := &Config{}
-	err = yaml.Unmarshal(data, cfg)
+	switch strings.ToLower(filepath.Ext(configPath)) {
+	case ".yaml", ".yml":
+		err = yaml.Unmarshal(data, cfg)
+	case ".json":
+		err = json.Unmarshal(data, cfg)
+	default:
+		return nil, formatNotSupportedError
+	}
+
 	if err != nil {
-		slog.Error("Failed to unmarshal configuration file", "error", err)
 		return nil, unmarshalConfigFileError
 	}
+
 	slog.Info("Loaded configuration successfully")
 
 	err = cfg.ValidateAll()

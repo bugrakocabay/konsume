@@ -28,6 +28,6 @@ deps:
 	$(GOGET) ./...
 
 plugin_postgres:
-	$(GOBUILD) -buildmode=plugin -o postgres.so ./plugin/postgresql/postgresql.go
+	$(GOBUILD) -buildmode=plugin -o ./plugins//postgres-darwin.so ./plugin/postgresql/postgresql.go
 
 start: plugin_postgres run

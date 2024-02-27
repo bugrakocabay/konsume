@@ -50,7 +50,7 @@ komsume is a tool that easily connects message queues like RabbitMQ and Kafka wi
 - **Retry Strategies**: Supports fixed, exponential, and random retry strategies for handling request failures.
 - **Request Body Templating**: Dynamically constructs request bodies using templates with values extracted from incoming messages.
 - **Custom HTTP Headers**: Allows setting custom HTTP headers for outgoing requests.
-- **Configurable via YAML**: Easy configuration using a YAML file for defining queues, routes, and behaviors.
+- **Configurable via YAML and JSON**: Easy configuration using a YAML or JSON file for defining queues, routes, and behaviors.
 - **Monitoring**: Provides a Prometheus endpoint for monitoring metrics.
 
 ## Installation
@@ -65,7 +65,7 @@ Alternatively, you can download the latest binary from the [releases](https://gi
 
 ## Usage
 
-konsume depends on a YAML configuration file for defining queues, routes, and behaviors. By default, konsume looks for a file named `config.yaml` in the `/config` directory. Alternatively, you can specify the environment variable `KONSUME_CONFIG_PATH` to point to your configuration file.
+konsume depends on a YAML or JSON configuration file for defining queues, routes, and behaviors. By default, konsume looks for a file named `config.yaml` in the `/config` directory. Alternatively, you can specify the environment variable `KONSUME_CONFIG_PATH` to point to your configuration file.
 
 <br>📜 <b>Checkout the [CONFIGURATION.md](./CONFIGURATION.md) for detailed information about the configuration parameters.
 <br>💡 You can also find detailed usage examples in the [examples](.examples) directory. </b>
