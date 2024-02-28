@@ -1,0 +1,30 @@
+log: text
+debug: true
+
+providers:
+  - name: "rabbit-queue"
+    type: "rabbitmq"
+    retry: 5
+    amqp-config:
+      host: "localhost"
+      port: 5672
+      username: "user"
+      password: "password"
+
+databases:
+  - name: "mongo-database"
+    type: "mongodb"
+    connection-string: "mongodb://localhost:27017"
+    retry: 3
+    database: "mynewdb"
+
+queues:
+  - name: "queue-for-rabbit"
+    provider: "rabbit-queue"
+    database-routes:
+      - name: "mongo-database-route"
+        provider: "mongo-database"
+        collection: "mynewcollection"
+        mapping:
+          userName: "name"
+          some-key: "value"
