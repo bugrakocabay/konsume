@@ -23,7 +23,7 @@ var (
 	invalidBodyForGraphQLError           = errors.New("when using graphql type, body must contain query or mutation")
 	bodyNotContainsStringForGraphQLError = errors.New("when using graphql type, body must contain string for query or mutation")
 
-  databaseRouteNameNotDefinedError              = errors.New("database route name not defined")
+	databaseRouteNameNotDefinedError              = errors.New("database route name not defined")
 	databaseRouteProviderNotDefinedError          = errors.New("database route provider not defined")
 	databaseRouteProviderDoesNotExistError        = errors.New("database route provider does not exist in databases list")
 	databaseRouteTableOrCollectionNotDefinedError = errors.New("database route table or collection not defined")
@@ -33,82 +33,82 @@ var (
 // QueueConfig is the main configuration information needed to consume a queue
 type QueueConfig struct {
 	// Name is the name of the queue
-	Name string `yaml:"name"`
+	Name string `yaml:"name" json:"name"`
 
 	// Provider is the provider that will be used to consume the queue
-	Provider string `yaml:"provider"`
+	Provider string `yaml:"provider" json:"provider"`
 
 	// Retry is the retry configuration for the queue
-	Retry *RetryConfig `yaml:"retry,omitempty"`
+	Retry *RetryConfig `yaml:"retry,omitempty" json:"retry,omitempty"`
 
 	// Routes is the list of routes that will be used to send the messages
-	Routes []*RouteConfig `yaml:"routes"`
+	Routes []*RouteConfig `yaml:"routes" json:"routes"`
 
 	// DatabaseRoutes is the list of databases that will be used to store the messages
-	DatabaseRoutes []*DatabaseRouteConfig `yaml:"database-routes,omitempty"`
+	DatabaseRoutes []*DatabaseRouteConfig `yaml:"database-routes,omitempty" json:"database-routes,omitempty"`
 }
 
 // RetryConfig is the main configuration information needed to retry a message
 type RetryConfig struct {
 	// Enabled is the flag that indicates if the retry is enabled, defaults to false
-	Enabled bool `yaml:"enabled,omitempty"`
+	Enabled bool `yaml:"enabled,omitempty" json:"enabled,omitempty"`
 
 	// MaxRetries is the maximum number of retries for the queue
-	MaxRetries int `yaml:"max_retries"`
+	MaxRetries int `yaml:"max_retries" json:"max_retries"`
 
 	// Strategy is the retry strategy for the queue, defaults to "fixed"
-	Strategy string `yaml:"strategy,omitempty"`
+	Strategy string `yaml:"strategy,omitempty" json:"strategy,omitempty"`
 
 	// Interval is the interval between retries
-	Interval time.Duration `yaml:"interval"`
+	Interval time.Duration `yaml:"interval" json:"interval"`
 
 	// ThresholdStatus is the minimum status code that will trigger a retry, defaults to 500
-	ThresholdStatus int `yaml:"threshold_status,omitempty"`
+	ThresholdStatus int `yaml:"threshold_status,omitempty" json:"threshold_status,omitempty"`
 }
 
 // RouteConfig is the main configuration information needed to send a message to a service
 type RouteConfig struct {
 	// Name is the name of the route
-	Name string `yaml:"name"`
+	Name string `yaml:"name" json:"name"`
 
 	// URL is the URL of the service
-	URL string `yaml:"url"`
+	URL string `yaml:"url" json:"url"`
 
 	// Method is the HTTP method of the request, defaults to "POST"
-	Method string `yaml:"method,omitempty"`
+	Method string `yaml:"method,omitempty" json:"method,omitempty"`
 
 	// Type is the type of the request, defaults to "REST"
-	Type string `yaml:"type,omitempty"`
+	Type string `yaml:"type,omitempty" json:"type,omitempty"`
 
 	// Headers is the list of headers that will be sent with the request
-	Headers map[string]string `yaml:"headers,omitempty"`
+	Headers map[string]string `yaml:"headers,omitempty" json:"headers,omitempty"`
 
 	// Body is the body of the request
-	Body map[string]interface{} `yaml:"body,omitempty"`
+	Body map[string]interface{} `yaml:"body,omitempty" json:"body,omitempty"`
 
 	// Query is the query string of the request
-	Query map[string]string `yaml:"query,omitempty"`
+	Query map[string]string `yaml:"query,omitempty" json:"query,omitempty"`
 
 	// Timeout is the timeout of the request, defaults to 10 seconds
-	Timeout time.Duration `yaml:"timeout,omitempty"`
+	Timeout time.Duration `yaml:"timeout,omitempty" json:"timeout,omitempty"`
 }
 
 // DatabaseRouteConfig is the main configuration information needed to store a message in a database
 type DatabaseRouteConfig struct {
 	// Name is the name of the database route
-	Name string `yaml:"name"`
+	Name string `yaml:"name" json:"name"`
 
 	// Provider is the name of the provider database
-	Provider string `yaml:"provider"`
+	Provider string `yaml:"provider" json:"provider"`
 
-  // Table is the name of the table in a SQL database
-	Table string `yaml:"table,omitempty"`
+	// Table is the name of the table in a SQL database
+	Table string `yaml:"table,omitempty" json:"table,omitempty"`
 
 	// Collection is the name of the collection in a NoSQL database
-	Collection string `yaml:"collection,omitempty"`
+	Collection string `yaml:"collection,omitempty" json:"collection,omitempty"`
 
 	// Mapping is the mapping of the message to the database
-	Mapping map[string]string `yaml:"mapping"`
+	Mapping map[string]string `yaml:"mapping" json:"mapping"`
 }
 
 func (queue *QueueConfig) validateQueue(providers []*ProviderConfig, databases []*DatabaseConfig) error {
@@ -217,7 +217,7 @@ func (queue *QueueConfig) validateQueue(providers []*ProviderConfig, databases [
 			if !databaseExists {
 				return databaseRouteProviderDoesNotExistError
 			}
-      if len(databaseRoute.Table) == 0 && len(databaseRoute.Collection) == 0 {
+			if len(databaseRoute.Table) == 0 && len(databaseRoute.Collection) == 0 {
 				return databaseRouteTableOrCollectionNotDefinedError
 			}
 			if len(databaseRoute.Mapping) == 0 {

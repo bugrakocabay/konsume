@@ -32,63 +32,63 @@ var (
 // ProviderConfig is the main configuration information needed to connect to a provider
 type ProviderConfig struct {
 	// Name is the name of the provider
-	Name string `yaml:"name"`
+	Name string `yaml:"name" json:"name"`
 
 	// Type is the type of the provider, such as "amqp" or "kafka"
-	Type string `yaml:"type"`
+	Type string `yaml:"type" json:"type"`
 
 	// Retry is the number of times to retry connecting to the provider
-	Retry int `yaml:"retry,omitempty"`
+	Retry int `yaml:"retry,omitempty" json:"retry,omitempty"`
 
 	// AMQPConfig is the configuration for the AMQP provider
-	AMQPConfig *AMQPConfig `yaml:"amqp-config,omitempty"`
+	AMQPConfig *AMQPConfig `yaml:"amqp-config,omitempty" json:"amqp-config,omitempty"`
 
 	// KafkaConfig is the configuration for the Kafka provider
-	KafkaConfig *KafkaConfig `yaml:"kafka-config,omitempty"`
+	KafkaConfig *KafkaConfig `yaml:"kafka-config,omitempty" json:"kafka-config,omitempty"`
 
 	// StompMQConfig is the configuration for the ActiveMQ provider
-	StompMQConfig *StompConfig `yaml:"stomp-config,omitempty"`
+	StompMQConfig *StompConfig `yaml:"stomp-config,omitempty" json:"stomp-config,omitempty"`
 }
 
 // AMQPConfig is the main configuration information needed to connect to an AMQP provider
 type AMQPConfig struct {
 	// Host is the host of the queue
-	Host string `yaml:"host,omitempty"`
+	Host string `yaml:"host,omitempty" json:"host,omitempty"`
 
 	// Port is the port of the queue
-	Port int `yaml:"port,omitempty"`
+	Port int `yaml:"port,omitempty" json:"port,omitempty"`
 
 	// Username is the username of the queue
-	Username string `yaml:"username,omitempty"`
+	Username string `yaml:"username,omitempty" json:"username,omitempty"`
 
 	// Password is the password of the queue
-	Password string `yaml:"password,omitempty"`
+	Password string `yaml:"password,omitempty" json:"password,omitempty"`
 }
 
 // KafkaConfig is the main configuration information needed to connect to a Kafka provider
 type KafkaConfig struct {
 	// Brokers is a list of brokers that will be consumed
-	Brokers []string `yaml:"brokers,omitempty"`
+	Brokers []string `yaml:"brokers,omitempty" json:"brokers,omitempty"`
 
 	// Topic is a list of topics that will be consumed
-	Topic string `yaml:"topic,omitempty"`
+	Topic string `yaml:"topic,omitempty" json:"topic,omitempty"`
 
 	// Group is the consumer group that will be used
-	Group string `yaml:"group,omitempty"`
+	Group string `yaml:"group,omitempty" json:"group,omitempty"`
 }
 
 type StompConfig struct {
 	// Host is the host of the queue
-	Host string `yaml:"host,omitempty"`
+	Host string `yaml:"host,omitempty" json:"host,omitempty"`
 
 	// Port is the port of the queue
-	Port int `yaml:"port,omitempty"`
+	Port int `yaml:"port,omitempty" json:"port,omitempty"`
 
 	// Username is the username of the queue
-	Username string `yaml:"username,omitempty"`
+	Username string `yaml:"username,omitempty" json:"username,omitempty"`
 
 	// Password is the password of the queue
-	Password string `yaml:"password,omitempty"`
+	Password string `yaml:"password,omitempty" json:"password,omitempty"`
 }
 
 // ValidateProvider validates the ProviderConfig struct
