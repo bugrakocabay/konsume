@@ -103,13 +103,13 @@ func initDatabases(cfg *config.Config) (map[string]database.Database, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err = db.Connect(dbConfig.ConnectionString); err != nil {
+		if err = db.Connect(dbConfig.ConnectionString, dbConfig.Database); err != nil {
 			slog.Error("Failed to connect to database", "type", dbConfig.Type, "error", err)
 			if dbConfig.Retry > 0 {
 				for i := 1; i <= dbConfig.Retry; i++ {
 					time.Sleep(time.Duration(5) * time.Second)
 					slog.Info("Retrying to connect to database", "retry", i)
-					if err = db.Connect(dbConfig.ConnectionString); err == nil {
+					if err = db.Connect(dbConfig.ConnectionString, dbConfig.Database); err == nil {
 						break
 					}
 				}

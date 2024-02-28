@@ -7,7 +7,7 @@ GOTEST=go test
 GOGET=go get
 GORUN=go run
 
-.PHONY: all build test clean run deps plugin_postgres
+.PHONY: all build test clean run deps plugin_postgres plugin_mongodb
 
 all: test build
 
@@ -28,6 +28,9 @@ deps:
 	$(GOGET) ./...
 
 plugin_postgres:
-	$(GOBUILD) -buildmode=plugin -o ./plugins//postgres-darwin.so ./plugin/postgresql/postgresql.go
+	$(GOBUILD) -buildmode=plugin -o ./plugins/postgres-darwin.so ./plugin/postgresql/postgresql.go
 
-start: plugin_postgres run
+plugin_mongodb:
+	$(GOBUILD) -buildmode=plugin -o ./plugins/mongodb-darwin.so ./plugin/mongodb/mongodb.go
+
+start: plugin_postgres plugin_mongodb run
