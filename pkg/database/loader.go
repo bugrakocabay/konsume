@@ -26,6 +26,8 @@ func getPluginPath(dbType string) string {
 	switch dbType {
 	case common.DatabaseTypePostgresql:
 		pluginFile = "postgres"
+	case common.DatabaseTypeMongoDB:
+		pluginFile = "mongodb"
 	default:
 		return ""
 	}
@@ -57,11 +59,11 @@ func loadPlugin(path string) (Database, error) {
 	if err != nil {
 		return nil, err
 	}
-	postgresPlugin, ok := symbol.(Database)
+	dbPlugin, ok := symbol.(Database)
 	if !ok {
 		return nil, err
 	}
-	return postgresPlugin, nil
+	return dbPlugin, nil
 }
 
 func getRootPath() string {

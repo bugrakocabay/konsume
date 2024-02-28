@@ -16,7 +16,7 @@ type PostgresPlugin struct {
 }
 
 // Connect establishes a connection to the PostgreSQL database
-func (p *PostgresPlugin) Connect(connectionString string) error {
+func (p *PostgresPlugin) Connect(connectionString, dbName string) error {
 	slog.Info("Connecting to PostgreSQL database")
 	var err error
 	p.db, err = sql.Open("postgres", connectionString)
