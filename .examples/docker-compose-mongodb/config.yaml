@@ -6,7 +6,7 @@ providers:
     type: "rabbitmq"
     retry: 5
     amqp-config:
-      host: "localhost"
+      host: "rabbitmq"
       port: 5672
       username: "user"
       password: "password"
@@ -14,7 +14,7 @@ providers:
 databases:
   - name: "mongo-database"
     type: "mongodb"
-    connection-string: "mongodb://localhost:27017"
+    connection-string: "mongodb://mongodb:27017"
     retry: 3
     database: "mynewdb"
 
