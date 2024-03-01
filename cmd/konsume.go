@@ -58,67 +58,78 @@ func Execute() {
 
 // setupLogger configures the logger based on the configuration
 func setupLogger(cfg *config.Config) {
-	if cfg.Log == "json" {
-		if cfg.Debug {
-			slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})))
-		} else {
-			slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})))
-		}
-	} else {
-		if cfg.Debug {
-			slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug})))
-		} else {
-			slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo})))
-		}
+	var handler slog.Handler
+	level := slog.LevelInfo
+	if cfg.Debug {
+		level = slog.LevelDebug
 	}
+	if cfg.Log == "json" {
+		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level})
+	} else {
+		handler = slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: level})
+	}
+	slog.SetDefault(slog.New(handler))
 }
 
 // initProviders initializes the consumers for each provider
 func initProviders(cfg *config.Config, consumers map[string]queue.MessageQueueConsumer, providerMap map[string]*config.ProviderConfig) {
+	factories := map[string]queue.Factory{
+		common.QueueSourceRabbitMQ: rabbitmq.NewConsumerFactory,
+		common.QueueSourceKafka:    kafka.NewConsumerFactory,
+		common.QueueSourceActiveMQ: activemq.NewConsumerFactory,
+	}
+
 	for _, provider := range cfg.Providers {
-		slog.Debug("Initializing provider", "provider", provider.Name, "type", provider.Type)
-		switch provider.Type {
-		case common.QueueSourceRabbitMQ:
-			consumer := rabbitmq.NewConsumer(provider.AMQPConfig)
-			consumers[provider.Name] = consumer
-			providerMap[provider.Name] = provider
-		case common.QueueSourceKafka:
-			consumer := kafka.NewConsumer(provider.KafkaConfig)
-			consumers[provider.Name] = consumer
-			providerMap[provider.Name] = provider
-		case common.QueueSourceActiveMQ:
-			consumer := activemq.NewConsumer(provider.StompMQConfig)
-			consumers[provider.Name] = consumer
-			providerMap[provider.Name] = provider
-		default:
-			log.Fatalf("Unknown queue source: %s", provider.Type)
+		factory, exists := factories[provider.Type]
+		if !exists {
+			slog.Error("Unknown provider type", "type", provider.Type)
+			continue
 		}
+
+		consumer, err := factory(provider)
+		if err != nil {
+			slog.Error("Failed to initialize provider", "error", err)
+			continue
+		}
+
+		consumers[provider.Name] = consumer
+		providerMap[provider.Name] = provider
 	}
 }
 
+// initDatabases initializes the databases based on the configuration
 func initDatabases(cfg *config.Config) (map[string]database.Database, error) {
 	dbMap := make(map[string]database.Database)
 	for _, dbConfig := range cfg.Databases {
 		db, err := database.LoadDatabasePlugin(dbConfig.Type)
 		if err != nil {
+			slog.Error("Failed to load database plugin", "type", dbConfig.Type, "error", err)
 			return nil, err
 		}
-		if err = db.Connect(dbConfig.ConnectionString, dbConfig.Database); err != nil {
-			slog.Error("Failed to connect to database", "type", dbConfig.Type, "error", err)
-			if dbConfig.Retry > 0 {
-				for i := 1; i <= dbConfig.Retry; i++ {
-					time.Sleep(time.Duration(5) * time.Second)
-					slog.Info("Retrying to connect to database", "retry", i)
-					if err = db.Connect(dbConfig.ConnectionString, dbConfig.Database); err == nil {
-						break
-					}
-				}
-			}
+		err = connectDbRetry(db, *dbConfig)
+		if err != nil {
+			slog.Error("Failed to connect to database after retries", "type", dbConfig.Type, "error", err)
 			return nil, err
 		}
 		dbMap[dbConfig.Name] = db
 	}
 	return dbMap, nil
+}
+
+// connectDbRetry attempts to connect to the database with retry logic.
+func connectDbRetry(db database.Database, dbConfig config.DatabaseConfig) error {
+	var err error
+	for attempt := 0; attempt <= dbConfig.Retry; attempt++ {
+		if attempt > 0 {
+			slog.Info("Retrying to connect to database", "type", dbConfig.Type, "attempt", attempt)
+			time.Sleep(5 * time.Second)
+		}
+		err = db.Connect(dbConfig.ConnectionString, dbConfig.Database)
+		if err == nil {
+			return nil
+		}
+	}
+	return err
 }
 
 // setupSignalHandling configures the signal handling for os.Interrupt and syscall.SIGTERM.
