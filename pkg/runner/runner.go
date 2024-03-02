@@ -2,7 +2,6 @@ package runner
 
 import (
 	"fmt"
-	"log"
 	"log/slog"
 	"math/rand"
 	"net/http"
@@ -39,7 +38,7 @@ func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueC
 				return
 			}
 			if err := listenAndProcess(c, qc, cfg.Metrics, databases); err != nil {
-				log.Printf("Failed to start consumer for queue %s: %s", qc.Name, err)
+				slog.Error("Failed to start consumer for", "queue", qc.Name, "error", err)
 			}
 		}(consumer, qCfg, providerCfg)
 	}
