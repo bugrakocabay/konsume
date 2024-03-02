@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bugrakocabay/konsume/pkg/config"
+	"github.com/bugrakocabay/konsume/pkg/queue"
 
 	"github.com/go-stomp/stomp/v3"
 )
@@ -21,6 +22,11 @@ func NewConsumer(cfg *config.StompConfig) *Consumer {
 	return &Consumer{
 		config: cfg,
 	}
+}
+
+// NewConsumerFactory returns a new RabbitMQ consumer based on the provided configuration.
+func NewConsumerFactory(cfg *config.ProviderConfig) (queue.MessageQueueConsumer, error) {
+	return NewConsumer(cfg.StompMQConfig), nil
 }
 
 func (c *Consumer) Connect() error {

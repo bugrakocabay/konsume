@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/bugrakocabay/konsume/pkg/config"
+	"github.com/bugrakocabay/konsume/pkg/queue"
 
 	"github.com/segmentio/kafka-go"
 )
@@ -20,6 +21,11 @@ func NewConsumer(cfg *config.KafkaConfig) *Consumer {
 	return &Consumer{
 		config: cfg,
 	}
+}
+
+// NewConsumerFactory returns a new RabbitMQ consumer based on the provided configuration.
+func NewConsumerFactory(cfg *config.ProviderConfig) (queue.MessageQueueConsumer, error) {
+	return NewConsumer(cfg.KafkaConfig), nil
 }
 
 // Connect creates a connection to Kafka
