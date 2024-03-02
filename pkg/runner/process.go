@@ -28,47 +28,62 @@ func listenAndProcess(consumer queue.MessageQueueConsumer, qCfg *config.QueueCon
 					slog.Error("Recovered from panic in message processing", "error", r)
 				}
 			}()
-			messageData, err := util.ParseJSONToMap(msg)
-			if err != nil {
-				slog.Error("Failed to parse message", "error", err)
-				return
-			}
-
-			if qCfg.Routes != nil && len(qCfg.Routes) > 0 {
-				for _, rCfg := range qCfg.Routes {
-					var body []byte
-
-					if len(rCfg.Body) > 0 {
-						body, err = prepareRequestBody(rCfg, messageData)
-						if err != nil {
-							slog.Error("Failed to prepare request body", "error", err)
-							continue
-						}
-					} else {
-						body = msg
-					}
-					rCfg.URL = appendQueryParams(rCfg.URL, rCfg.Query)
-					rqstr := requester.NewRequester(rCfg.URL, rCfg.Method, body, rCfg.Headers)
-					sendRequestWithStrategy(qCfg, rCfg, mCfg, rqstr)
-				}
-			}
-
-			if qCfg.DatabaseRoutes != nil && len(qCfg.DatabaseRoutes) > 0 {
-				for _, dbRoute := range qCfg.DatabaseRoutes {
-					db, ok := databases[dbRoute.Provider]
-					if !ok {
-						slog.Error("Database not found", "database", dbRoute.Name)
-						continue
-					}
-					if err = db.Insert(messageData, *dbRoute); err != nil {
-						slog.Error("Failed to insert data into database", "error", err)
-					}
-				}
-			}
-
+			processMessage(msg, qCfg, mCfg, databases)
 		}(msg)
+
 		return nil
 	})
+}
+
+// processMessage processes the message by sending requests and inserting data into databases
+func processMessage(msg []byte, qCfg *config.QueueConfig, mCfg *config.MetricsConfig, databases map[string]database.Database) {
+	messageData, err := util.ParseJSONToMap(msg)
+	if err != nil {
+		slog.Error("Failed to parse message", "error", err)
+		return
+	}
+	handleRoutes(qCfg, messageData, msg, mCfg)
+	handleDatabaseRoutes(qCfg, messageData, databases)
+}
+
+// handleRoutes sends requests to the routes defined in the queue config
+func handleRoutes(qCfg *config.QueueConfig, messageData map[string]interface{}, msg []byte, mCfg *config.MetricsConfig) {
+	if qCfg.Routes == nil {
+		return
+	}
+	for _, rCfg := range qCfg.Routes {
+		var body []byte
+		var err error
+		if len(rCfg.Body) > 0 {
+			body, err = prepareRequestBody(rCfg, messageData)
+			if err != nil {
+				slog.Error("Failed to prepare request body", "error", err)
+				continue
+			}
+		} else {
+			body = msg
+		}
+		rCfg.URL = appendQueryParams(rCfg.URL, rCfg.Query)
+		rqstr := requester.NewRequester(rCfg.URL, rCfg.Method, body, rCfg.Headers)
+		sendRequestWithStrategy(qCfg, rCfg, mCfg, rqstr)
+	}
+}
+
+// handleDatabaseRoutes inserts data into the databases defined in the queue config
+func handleDatabaseRoutes(qCfg *config.QueueConfig, messageData map[string]interface{}, databases map[string]database.Database) {
+	if qCfg.DatabaseRoutes == nil {
+		return
+	}
+	for _, dbRoute := range qCfg.DatabaseRoutes {
+		db, ok := databases[dbRoute.Provider]
+		if !ok {
+			slog.Error("Database not found", "database", dbRoute.Name)
+			continue
+		}
+		if err := db.Insert(messageData, *dbRoute); err != nil {
+			slog.Error("Failed to insert data into database", "error", err)
+		}
+	}
 }
 
 // prepareRequestBody prepares the request body according to the route type
@@ -93,10 +108,12 @@ func prepareGraphQLBody(rCfg *config.RouteConfig, messageData map[string]interfa
 	return json.Marshal(map[string]string{"query": bodyStr})
 }
 
+// prepareRESTBody creates a rest request body from the given route config and message data
 func prepareRESTBody(rCfg *config.RouteConfig, messageData map[string]interface{}) ([]byte, error) {
 	return util.ProcessTemplate(rCfg.Body, messageData)
 }
 
+// getGraphQLOperation returns the query or mutation from the graphql request body
 func getGraphQLOperation(bodyMap map[string]interface{}) string {
 	if operation, ok := bodyMap["query"].(string); ok {
 		return operation
@@ -107,6 +124,7 @@ func getGraphQLOperation(bodyMap map[string]interface{}) string {
 	return ""
 }
 
+// appendQueryParams appends the query parameters to the given url
 func appendQueryParams(url string, queryParams map[string]string) string {
 	if len(queryParams) == 0 {
 		return url
