@@ -124,8 +124,7 @@ func (c *Config) ValidateAll() error {
 		c.Log = "text"
 	}
 
-	if c.Debug {
-		slog.Debug("Configuration validated successfully")
-	}
+	slog.Debug("Configuration validated successfully")
+
 	return nil
 }
