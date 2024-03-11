@@ -302,6 +302,7 @@ func TestSendRequestWithStrategy(t *testing.T) {
 			qCfg := &config.QueueConfig{
 				Name: "testQueue",
 				Retry: &config.RetryConfig{
+					Enabled:         tt.retryEnabled,
 					Strategy:        tt.retryStrategy,
 					MaxRetries:      tt.maxRetries,
 					Interval:        tt.interval,
@@ -315,7 +316,7 @@ func TestSendRequestWithStrategy(t *testing.T) {
 			if mockHTTPRequester.CallCount != tt.expectedCalls {
 				t.Errorf("Expected %d calls to SendRequest, got %d", tt.expectedCalls, mockHTTPRequester.CallCount)
 			}
-			if qCfg.Retry != nil && qCfg.Retry.Enabled {
+			if qCfg.Retry != nil && qCfg.Retry.Enabled && qCfg.Retry.Strategy != common.RetryStrategyRand {
 				if duration < qCfg.Retry.Interval*time.Duration(qCfg.Retry.MaxRetries) {
 					t.Errorf("Expected duration to be greater than %d, got %d", qCfg.Retry.Interval*time.Duration(qCfg.Retry.MaxRetries), duration)
 				}

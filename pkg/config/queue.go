@@ -60,7 +60,7 @@ type RetryConfig struct {
 	Strategy string `yaml:"strategy,omitempty" json:"strategy,omitempty"`
 
 	// Interval is the interval between retries
-	Interval time.Duration `yaml:"interval" json:"interval"`
+	Interval time.Duration `yaml:"interval,omitempty" json:"interval,omitempty"`
 
 	// ThresholdStatus is the minimum status code that will trigger a retry, defaults to 500
 	ThresholdStatus int `yaml:"threshold_status,omitempty" json:"threshold_status,omitempty"`
