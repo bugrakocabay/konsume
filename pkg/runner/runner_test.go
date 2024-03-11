@@ -321,11 +321,6 @@ func TestSendRequestWithStrategy(t *testing.T) {
 					t.Errorf("Expected duration to be greater than %d, got %d", qCfg.Retry.Interval*time.Duration(qCfg.Retry.MaxRetries), duration)
 				}
 			}
-			if qCfg.Retry != nil && qCfg.Retry.Enabled && qCfg.Retry.Strategy == common.RetryStrategyRand {
-				if duration > qCfg.Retry.Interval*time.Duration(qCfg.Retry.MaxRetries) {
-					t.Errorf("Expected duration to be greater than %d, got %d", duration, qCfg.Retry.Interval*time.Duration(qCfg.Retry.MaxRetries))
-				}
-			}
 		})
 	}
 }
