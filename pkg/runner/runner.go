@@ -98,10 +98,7 @@ func sendRequestWithStrategy(qCfg *config.QueueConfig, rCfg *config.RouteConfig,
 
 // shouldRetry determines whether a request should be retried based on the response and retry configuration
 func shouldRetry(resp *http.Response, retryConfig *config.RetryConfig) bool {
-	if retryConfig == nil {
-		return false
-	}
-	if !retryConfig.Enabled {
+	if retryConfig == nil || !retryConfig.Enabled {
 		return false
 	}
 	return resp == nil || resp.StatusCode >= retryConfig.ThresholdStatus
