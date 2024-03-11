@@ -24,7 +24,7 @@ jobs:
         run: go build -v -buildmode=plugin -o plugin/postgresql/postgres.so ./plugin/postgresql
 
       - name: Test with coverage
-        run: go test ./... -race -coverprofile=coverage.txt -covermode=atomic
+        run: go test ./pkg/... -race -coverprofile=coverage.txt -covermode=atomic
 
       - name: Codecov
         uses: codecov/codecov-action@v4.1.0
