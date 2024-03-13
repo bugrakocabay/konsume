@@ -9,7 +9,9 @@ import (
 	"os"
 	"sync"
 	"testing"
+	"time"
 
+	"github.com/bugrakocabay/konsume/pkg/common"
 	"github.com/bugrakocabay/konsume/pkg/config"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -120,4 +122,20 @@ func setupMockServer(t *testing.T) (*httptest.Server, string, *RequestCapture) {
 	}))
 
 	return mockServer, mockServer.URL, capture
+}
+
+func sleep(test TestCase) {
+	retry := test.KonsumeConfig.Queues[0].Retry
+	if retry == nil {
+		time.Sleep(2 * time.Second)
+		return
+	}
+
+	if retry.Enabled && retry.Interval > 0 && retry.Strategy != common.RetryStrategyExpo {
+		time.Sleep(retry.Interval * time.Duration(retry.MaxRetries+1))
+		return
+	} else if retry.Enabled && retry.Interval > 0 && retry.Strategy == common.RetryStrategyExpo {
+		time.Sleep(time.Duration(retry.MaxRetries*retry.MaxRetries) * retry.Interval)
+		return
+	}
 }

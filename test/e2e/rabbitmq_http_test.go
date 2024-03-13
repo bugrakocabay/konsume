@@ -7,6 +7,7 @@ import (
 	"time"
 
 	konsume "github.com/bugrakocabay/konsume/cmd"
+	"github.com/bugrakocabay/konsume/pkg/common"
 	"github.com/bugrakocabay/konsume/pkg/config"
 )
 
@@ -125,6 +126,177 @@ func TestKonsumeWithRabbitMQHTTP(t *testing.T) {
 				},
 			},
 		},
+		{
+			Description: "Test with single message fixed retry strategy",
+			KonsumeConfig: &config.Config{
+				Providers: []*config.ProviderConfig{
+					{
+						Name: "rabbit-queue",
+						Type: "rabbitmq",
+						AMQPConfig: &config.AMQPConfig{
+							Host:     host,
+							Port:     port,
+							Username: username,
+							Password: password,
+						},
+					},
+				},
+				Queues: []*config.QueueConfig{
+					{
+						Name:     testQueueName + "-3",
+						Provider: "rabbit-queue",
+						Retry: &config.RetryConfig{
+							Enabled:         true,
+							MaxRetries:      2,
+							Strategy:        common.RetryStrategyFixed,
+							ThresholdStatus: 500,
+							Interval:        1 * time.Second,
+						},
+						Routes: []*config.RouteConfig{
+							{
+								Name: "test-route",
+								URL:  fmt.Sprintf("%s/500", url),
+							},
+						},
+					},
+				},
+			},
+			SetupMessage: SetupMessage{
+				QueueName: testQueueName + "-3",
+				Message:   []byte("{\"id\": 1, \"name\": \"test\"}"),
+			},
+			ExpectedResult: []HTTPRequestExpectation{
+				{
+					URL:    "/500",
+					Body:   "{\"id\": 1, \"name\": \"test\"}",
+					Method: "POST",
+				},
+				{
+					URL:    "/500",
+					Body:   "{\"id\": 1, \"name\": \"test\"}",
+					Method: "POST",
+				},
+				{
+					URL:    "/500",
+					Body:   "{\"id\": 1, \"name\": \"test\"}",
+					Method: "POST",
+				},
+			},
+		},
+		{
+			Description: "Test with single message expo retry strategy",
+			KonsumeConfig: &config.Config{
+				Providers: []*config.ProviderConfig{
+					{
+						Name: "rabbit-queue",
+						Type: "rabbitmq",
+						AMQPConfig: &config.AMQPConfig{
+							Host:     host,
+							Port:     port,
+							Username: username,
+							Password: password,
+						},
+					},
+				},
+				Queues: []*config.QueueConfig{
+					{
+						Name:     testQueueName + "-4",
+						Provider: "rabbit-queue",
+						Retry: &config.RetryConfig{
+							Enabled:         true,
+							MaxRetries:      2,
+							Strategy:        common.RetryStrategyExpo,
+							ThresholdStatus: 500,
+							Interval:        1 * time.Second,
+						},
+						Routes: []*config.RouteConfig{
+							{
+								Name: "test-route",
+								URL:  fmt.Sprintf("%s/500", url),
+							},
+						},
+					},
+				},
+			},
+			SetupMessage: SetupMessage{
+				QueueName: testQueueName + "-4",
+				Message:   []byte("{\"id\": 1, \"name\": \"test\"}"),
+			},
+			ExpectedResult: []HTTPRequestExpectation{
+				{
+					URL:    "/500",
+					Body:   "{\"id\": 1, \"name\": \"test\"}",
+					Method: "POST",
+				},
+				{
+					URL:    "/500",
+					Body:   "{\"id\": 1, \"name\": \"test\"}",
+					Method: "POST",
+				},
+				{
+					URL:    "/500",
+					Body:   "{\"id\": 1, \"name\": \"test\"}",
+					Method: "POST",
+				},
+			},
+		},
+		{
+			Description: "Test with single message rand retry strategy",
+			KonsumeConfig: &config.Config{
+				Providers: []*config.ProviderConfig{
+					{
+						Name: "rabbit-queue",
+						Type: "rabbitmq",
+						AMQPConfig: &config.AMQPConfig{
+							Host:     host,
+							Port:     port,
+							Username: username,
+							Password: password,
+						},
+					},
+				},
+				Queues: []*config.QueueConfig{
+					{
+						Name:     testQueueName + "-5",
+						Provider: "rabbit-queue",
+						Retry: &config.RetryConfig{
+							Enabled:         true,
+							MaxRetries:      2,
+							Strategy:        common.RetryStrategyRand,
+							ThresholdStatus: 500,
+							Interval:        1 * time.Second,
+						},
+						Routes: []*config.RouteConfig{
+							{
+								Name: "test-route",
+								URL:  fmt.Sprintf("%s/500", url),
+							},
+						},
+					},
+				},
+			},
+			SetupMessage: SetupMessage{
+				QueueName: testQueueName + "-5",
+				Message:   []byte("{\"id\": 1, \"name\": \"test\"}"),
+			},
+			ExpectedResult: []HTTPRequestExpectation{
+				{
+					URL:    "/500",
+					Body:   "{\"id\": 1, \"name\": \"test\"}",
+					Method: "POST",
+				},
+				{
+					URL:    "/500",
+					Body:   "{\"id\": 1, \"name\": \"test\"}",
+					Method: "POST",
+				},
+				{
+					URL:    "/500",
+					Body:   "{\"id\": 1, \"name\": \"test\"}",
+					Method: "POST",
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -151,7 +323,7 @@ func TestKonsumeWithRabbitMQHTTP(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Failed to push message to queue: %v", err)
 			}
-			time.Sleep(2 * time.Second)
+			sleep(test)
 
 			// Checking the captured requests
 			requestCapture.Mutex.Lock()
