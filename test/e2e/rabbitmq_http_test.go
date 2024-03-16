@@ -11,32 +11,6 @@ import (
 	"github.com/bugrakocabay/konsume/pkg/config"
 )
 
-const (
-	host          = "localhost"
-	port          = 5672
-	username      = "user"
-	password      = "password"
-	testQueueName = "test-queue"
-)
-
-type TestCase struct {
-	Description    string
-	KonsumeConfig  *config.Config
-	SetupMessage   SetupMessage
-	ExpectedResult []HTTPRequestExpectation
-}
-
-type SetupMessage struct {
-	QueueName string
-	Message   []byte
-}
-
-type HTTPRequestExpectation struct {
-	URL    string
-	Method string
-	Body   string
-}
-
 func TestKonsumeWithRabbitMQHTTP(t *testing.T) {
 	mockServer, url, requestCapture := setupMockServer(t)
 	defer mockServer.Close()

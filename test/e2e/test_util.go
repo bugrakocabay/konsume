@@ -16,6 +16,32 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+const (
+	host          = "localhost"
+	port          = 5672
+	username      = "user"
+	password      = "password"
+	testQueueName = "test-queue"
+)
+
+type TestCase struct {
+	Description    string
+	KonsumeConfig  *config.Config
+	SetupMessage   SetupMessage
+	ExpectedResult []HTTPRequestExpectation
+}
+
+type SetupMessage struct {
+	QueueName string
+	Message   []byte
+}
+
+type HTTPRequestExpectation struct {
+	URL    string
+	Method string
+	Body   string
+}
+
 type RequestCapture struct {
 	Mutex            sync.Mutex
 	ReceivedRequests []HTTPRequestExpectation
