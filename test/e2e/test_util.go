@@ -1,7 +1,6 @@
 package e2e
 
 import (
-	"context"
 	"io"
 	"log"
 	"net/http"
@@ -14,59 +13,44 @@ import (
 	"github.com/bugrakocabay/konsume/pkg/common"
 	"github.com/bugrakocabay/konsume/pkg/config"
 
-	amqp "github.com/rabbitmq/amqp091-go"
 	"gopkg.in/yaml.v3"
 )
+
+const (
+	host          = "localhost"
+	port          = 5672
+	username      = "user"
+	password      = "password"
+	testQueueName = "test-queue"
+)
+
+type TestCase struct {
+	Description    string
+	KonsumeConfig  *config.Config
+	SetupMessage   SetupMessage
+	ExpectedResult []HTTPRequestExpectation
+	ExpectedQuery  DBQueryExpectation
+}
+
+type SetupMessage struct {
+	QueueName string
+	Message   []byte
+}
+
+type HTTPRequestExpectation struct {
+	URL    string
+	Method string
+	Body   string
+}
 
 type RequestCapture struct {
 	Mutex            sync.Mutex
 	ReceivedRequests []HTTPRequestExpectation
 }
 
-// connectToRabbitMQ establishes a connection to RabbitMQ and returns the connection and channel
-func connectToRabbitMQ(connectionString string) (*amqp.Connection, *amqp.Channel, error) {
-	conn, err := amqp.Dial(connectionString)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	ch, err := conn.Channel()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return conn, ch, nil
-}
-
-// pushMessageToQueue publishes a message to the specified queue in RabbitMQ
-func pushMessageToQueue(ch *amqp.Channel, queueName string, body []byte) error {
-	q, err := ch.QueueDeclare(
-		queueName, // name
-		true,      // durable
-		false,     // delete when unused
-		false,     // exclusive
-		false,     // no-wait
-		nil,       // arguments
-	)
-	if err != nil {
-		return err
-	}
-	ctx := context.Background()
-	err = ch.PublishWithContext(
-		ctx,
-		"",     // exchange
-		q.Name, // routing key
-		false,  // mandatory
-		false,  // immediate
-		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        body,
-		})
-	if err != nil {
-		return err
-	}
-
-	return nil
+type DBQueryExpectation struct {
+	Table string
+	Data  map[string]any
 }
 
 // writeConfigToFile writes the given config to a temporary file and returns the file path and a cleanup function
