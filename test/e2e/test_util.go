@@ -29,6 +29,7 @@ type TestCase struct {
 	KonsumeConfig  *config.Config
 	SetupMessage   SetupMessage
 	ExpectedResult []HTTPRequestExpectation
+	ExpectedQuery  DBQueryExpectation
 }
 
 type SetupMessage struct {
@@ -45,6 +46,11 @@ type HTTPRequestExpectation struct {
 type RequestCapture struct {
 	Mutex            sync.Mutex
 	ReceivedRequests []HTTPRequestExpectation
+}
+
+type DBQueryExpectation struct {
+	Table string
+	Data  map[string]any
 }
 
 // writeConfigToFile writes the given config to a temporary file and returns the file path and a cleanup function
