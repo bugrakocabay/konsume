@@ -1,7 +1,6 @@
 package e2e
 
 import (
-	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -11,22 +10,21 @@ import (
 	"github.com/bugrakocabay/konsume/pkg/config"
 )
 
-const tableName = "test_table"
-
-func TestKonsumeWithRabbitMQPostgres(t *testing.T) {
+func TestKonsumeWithKafkaPostgres(t *testing.T) {
 	tests := []TestCase{
 		{
 			Description: "Test with single message",
 			KonsumeConfig: &config.Config{
 				Providers: []*config.ProviderConfig{
 					{
-						Name: "rabbit-queue",
-						Type: "rabbitmq",
-						AMQPConfig: &config.AMQPConfig{
-							Host:     host,
-							Port:     port,
-							Username: username,
-							Password: password,
+						Name: "kafka-queue",
+						Type: "kafka",
+						KafkaConfig: &config.KafkaConfig{
+							Topic: "kafka-1",
+							Brokers: []string{
+								"127.0.0.1:29092",
+							},
+							Group: "test-group",
 						},
 					},
 				},
@@ -40,7 +38,7 @@ func TestKonsumeWithRabbitMQPostgres(t *testing.T) {
 				Queues: []*config.QueueConfig{
 					{
 						Name:     testQueueName + "-1",
-						Provider: "rabbit-queue",
+						Provider: "kafka-queue",
 						DatabaseRoutes: []*config.DatabaseRouteConfig{
 							{
 								Name:     "test-db-route",
@@ -73,7 +71,7 @@ func TestKonsumeWithRabbitMQPostgres(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.Description, func(t *testing.T) {
-			// Connect to postgres
+			// connect to postgres
 			pgConnStr := test.KonsumeConfig.Databases[0].ConnectionString
 			db, err := connectToPostgres(pgConnStr)
 			if err != nil {
@@ -101,16 +99,14 @@ func TestKonsumeWithRabbitMQPostgres(t *testing.T) {
 			time.Sleep(2 * time.Second)
 
 			// Pushing the message to the queue
-			connString := fmt.Sprintf("amqp://%s:%s@%s:%d/", username, password, host, port)
-			conn, ch, err := connectToRabbitMQ(connString)
+			conn, err := connectToKafka(test.KonsumeConfig.Providers[0].KafkaConfig.Brokers[0], test.KonsumeConfig.Providers[0].KafkaConfig.Topic)
 			if err != nil {
-				t.Fatalf("Failed to connect to RabbitMQ: %v", err)
+				t.Fatalf("Failed to connect to Kafka: %v", err)
 			}
 			defer conn.Close()
-			defer ch.Close()
-			err = pushMessageToQueue(ch, test.SetupMessage.QueueName, test.SetupMessage.Message)
+			err = pushMessageToKafka(conn, test.SetupMessage.Message)
 			if err != nil {
-				t.Fatalf("Failed to push message to queue: %v", err)
+				t.Fatalf("Failed to push message to Kafka: %v", err)
 			}
 			sleep(test)
 

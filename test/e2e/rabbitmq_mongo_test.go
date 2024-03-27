@@ -1,19 +1,19 @@
 package e2e
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
 	"time"
 
 	konsume "github.com/bugrakocabay/konsume/cmd"
-	"github.com/bugrakocabay/konsume/pkg/common"
 	"github.com/bugrakocabay/konsume/pkg/config"
 )
 
-const tableName = "test_table"
+const collectionName = "test_collection"
 
-func TestKonsumeWithRabbitMQPostgres(t *testing.T) {
+func TestKonsumeWithRabbitMQMongo(t *testing.T) {
 	tests := []TestCase{
 		{
 			Description: "Test with single message",
@@ -32,9 +32,10 @@ func TestKonsumeWithRabbitMQPostgres(t *testing.T) {
 				},
 				Databases: []*config.DatabaseConfig{
 					{
-						Name:             "sql-database",
-						Type:             common.DatabaseTypePostgresql,
-						ConnectionString: "postgres://postgres:mysecretpassword@localhost:5432/mynewdatabase?sslmode=disable",
+						Name:             "mongo-database",
+						Type:             "mongodb",
+						ConnectionString: "mongodb://localhost:27017",
+						Database:         "mynewdb",
 					},
 				},
 				Queues: []*config.QueueConfig{
@@ -43,9 +44,9 @@ func TestKonsumeWithRabbitMQPostgres(t *testing.T) {
 						Provider: "rabbit-queue",
 						DatabaseRoutes: []*config.DatabaseRouteConfig{
 							{
-								Name:     "test-db-route",
-								Provider: "sql-database",
-								Table:    tableName,
+								Name:       "test-db-route",
+								Provider:   "mongo-database",
+								Collection: collectionName,
 								Mapping: map[string]string{
 									"car_brand": "brand",
 									"car_model": "model",
@@ -61,7 +62,7 @@ func TestKonsumeWithRabbitMQPostgres(t *testing.T) {
 				Message:   []byte("{\"car_brand\": \"test\", \"car_model\": \"test\", \"car_year\": 2021}"),
 			},
 			ExpectedQuery: DBQueryExpectation{
-				Table: tableName,
+				Table: collectionName,
 				Data: map[string]any{
 					"brand": "test",
 					"model": "test",
@@ -73,22 +74,17 @@ func TestKonsumeWithRabbitMQPostgres(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.Description, func(t *testing.T) {
-			// Connect to postgres
-			pgConnStr := test.KonsumeConfig.Databases[0].ConnectionString
-			db, err := connectToPostgres(pgConnStr)
+			// Connect to mongo
+			connStr := test.KonsumeConfig.Databases[0].ConnectionString
+			db, err := connectToMongo(connStr, test.KonsumeConfig.Databases[0].Database)
 			if err != nil {
-				t.Fatalf("Failed to connect to postgres: %v", err)
+				t.Fatalf("Failed to connect to MongoDB: %v", err)
 			}
-			defer db.Close()
-			err = createTable(db, tableName, map[string]string{
-				"brand": "text",
-				"model": "text",
-				"year":  "integer",
-			})
+			err = createCollection(db, collectionName)
 			if err != nil {
-				t.Fatalf("Failed to create table: %v", err)
+				t.Fatalf("Failed to create collection: %v", err)
 			}
-			defer dropTable(db, tableName)
+			defer dropCollection(db, collectionName)
 
 			// Setting up the config file
 			configFilePath, cleanup := writeConfigToFile(test.KonsumeConfig)
@@ -115,33 +111,26 @@ func TestKonsumeWithRabbitMQPostgres(t *testing.T) {
 			sleep(test)
 
 			// Verify the result
-			rows, err := queryTable(db, tableName)
+			cursor, err := queryCollection(db, collectionName)
 			if err != nil {
-				t.Fatalf("Failed to query table: %v", err)
+				t.Fatalf("Failed to query collection: %v", err)
 			}
-			var brand string
-			var model string
-			var year int
-			if !rows.Next() {
-				t.Fatalf("Expected at least 1 row, but found none")
+			var data map[string]any
+			for cursor.Next(context.Background()) {
+				if err = cursor.Decode(&data); err != nil {
+					t.Fatalf("Failed to decode data: %v", err)
+				}
+				break
 			}
-			err = rows.Scan(&brand, &model, &year)
-			if err != nil {
-				t.Fatalf("Failed to scan row: %v", err)
-			}
-			if rows.Next() {
-				t.Fatalf("Expected exactly 1 row, but found more")
-			}
-			rows.Close()
 			expected := test.ExpectedQuery.Data
-			if brand != expected["brand"].(string) {
-				t.Errorf("Expected brand: %s, got: %s", expected["brand"].(string), brand)
+			if data["brand"] != expected["brand"] {
+				t.Fatalf("Expected brand: %v, got: %v", expected["brand"], data["brand"])
 			}
-			if model != expected["model"].(string) {
-				t.Errorf("Expected model: %s, got: %s", expected["model"].(string), model)
+			if data["model"] != expected["model"] {
+				t.Fatalf("Expected model: %v, got: %v", expected["model"], data["model"])
 			}
-			if year != expected["year"].(int) {
-				t.Errorf("Expected year: %d, got: %d", expected["year"].(int), year)
+			if data["year"].(float64) != float64(expected["year"].(int)) {
+				t.Fatalf("Expected year: %v, got: %v", expected["year"], data["year"])
 			}
 		})
 	}
