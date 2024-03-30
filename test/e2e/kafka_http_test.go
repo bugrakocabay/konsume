@@ -11,7 +11,7 @@ import (
 	"github.com/bugrakocabay/konsume/pkg/config"
 )
 
-func TestKonsumeWithRabbitMQHTTP(t *testing.T) {
+func TestKonsumeWithKafkaHTTP(t *testing.T) {
 	mockServer, url, requestCapture := setupMockServer(t)
 	defer mockServer.Close()
 
@@ -21,20 +21,21 @@ func TestKonsumeWithRabbitMQHTTP(t *testing.T) {
 			KonsumeConfig: &config.Config{
 				Providers: []*config.ProviderConfig{
 					{
-						Name: "rabbit-queue",
-						Type: "rabbitmq",
-						AMQPConfig: &config.AMQPConfig{
-							Host:     host,
-							Port:     port,
-							Username: username,
-							Password: password,
+						Name: "kafka-queue",
+						Type: "kafka",
+						KafkaConfig: &config.KafkaConfig{
+							Topic: "kafka-1",
+							Brokers: []string{
+								"127.0.0.1:29092",
+							},
+							Group: "test-group",
 						},
 					},
 				},
 				Queues: []*config.QueueConfig{
 					{
-						Name:     testQueueName + "-1",
-						Provider: "rabbit-queue",
+						Name:     "kafka-1",
+						Provider: "kafka-queue",
 						Routes: []*config.RouteConfig{
 							{
 								Name: "test-route",
@@ -45,7 +46,7 @@ func TestKonsumeWithRabbitMQHTTP(t *testing.T) {
 				},
 			},
 			SetupMessage: SetupMessage{
-				QueueName: testQueueName + "-1",
+				QueueName: "kafka-1",
 				Message:   []byte("{\"id\": 0, \"name\": \"test\"}"),
 			},
 			ExpectedResult: []HTTPRequestExpectation{
@@ -61,20 +62,21 @@ func TestKonsumeWithRabbitMQHTTP(t *testing.T) {
 			KonsumeConfig: &config.Config{
 				Providers: []*config.ProviderConfig{
 					{
-						Name: "rabbit-queue",
-						Type: "rabbitmq",
-						AMQPConfig: &config.AMQPConfig{
-							Host:     host,
-							Port:     port,
-							Username: username,
-							Password: password,
+						Name: "kafka-queue",
+						Type: "kafka",
+						KafkaConfig: &config.KafkaConfig{
+							Topic: "kafka-2",
+							Brokers: []string{
+								"127.0.0.1:29092",
+							},
+							Group: "test-group",
 						},
 					},
 				},
 				Queues: []*config.QueueConfig{
 					{
-						Name:     testQueueName + "-2",
-						Provider: "rabbit-queue",
+						Name:     "kafka-2",
+						Provider: "kafka-queue",
 						Routes: []*config.RouteConfig{
 							{
 								Name: "test-route",
@@ -89,7 +91,7 @@ func TestKonsumeWithRabbitMQHTTP(t *testing.T) {
 				},
 			},
 			SetupMessage: SetupMessage{
-				QueueName: testQueueName + "-2",
+				QueueName: "kafka-2",
 				Message:   []byte("{\"id\": 1, \"name\": \"test\"}"),
 			},
 			ExpectedResult: []HTTPRequestExpectation{
@@ -105,20 +107,21 @@ func TestKonsumeWithRabbitMQHTTP(t *testing.T) {
 			KonsumeConfig: &config.Config{
 				Providers: []*config.ProviderConfig{
 					{
-						Name: "rabbit-queue",
-						Type: "rabbitmq",
-						AMQPConfig: &config.AMQPConfig{
-							Host:     host,
-							Port:     port,
-							Username: username,
-							Password: password,
+						Name: "kafka-queue",
+						Type: "kafka",
+						KafkaConfig: &config.KafkaConfig{
+							Topic: "kafka-3",
+							Brokers: []string{
+								"127.0.0.1:29092",
+							},
+							Group: "test-group",
 						},
 					},
 				},
 				Queues: []*config.QueueConfig{
 					{
-						Name:     testQueueName + "-3",
-						Provider: "rabbit-queue",
+						Name:     "kafka-3",
+						Provider: "kafka-queue",
 						Retry: &config.RetryConfig{
 							Enabled:         true,
 							MaxRetries:      2,
@@ -136,7 +139,7 @@ func TestKonsumeWithRabbitMQHTTP(t *testing.T) {
 				},
 			},
 			SetupMessage: SetupMessage{
-				QueueName: testQueueName + "-3",
+				QueueName: "kafka-3",
 				Message:   []byte("{\"id\": 1, \"name\": \"test\"}"),
 			},
 			ExpectedResult: []HTTPRequestExpectation{
@@ -162,20 +165,21 @@ func TestKonsumeWithRabbitMQHTTP(t *testing.T) {
 			KonsumeConfig: &config.Config{
 				Providers: []*config.ProviderConfig{
 					{
-						Name: "rabbit-queue",
-						Type: "rabbitmq",
-						AMQPConfig: &config.AMQPConfig{
-							Host:     host,
-							Port:     port,
-							Username: username,
-							Password: password,
+						Name: "kafka-queue",
+						Type: "kafka",
+						KafkaConfig: &config.KafkaConfig{
+							Topic: "kafka-4",
+							Brokers: []string{
+								"127.0.0.1:29092",
+							},
+							Group: "test-group",
 						},
 					},
 				},
 				Queues: []*config.QueueConfig{
 					{
-						Name:     testQueueName + "-4",
-						Provider: "rabbit-queue",
+						Name:     "kafka-4",
+						Provider: "kafka-queue",
 						Retry: &config.RetryConfig{
 							Enabled:         true,
 							MaxRetries:      2,
@@ -193,7 +197,7 @@ func TestKonsumeWithRabbitMQHTTP(t *testing.T) {
 				},
 			},
 			SetupMessage: SetupMessage{
-				QueueName: testQueueName + "-4",
+				QueueName: "kafka-4",
 				Message:   []byte("{\"id\": 1, \"name\": \"test\"}"),
 			},
 			ExpectedResult: []HTTPRequestExpectation{
@@ -219,20 +223,21 @@ func TestKonsumeWithRabbitMQHTTP(t *testing.T) {
 			KonsumeConfig: &config.Config{
 				Providers: []*config.ProviderConfig{
 					{
-						Name: "rabbit-queue",
-						Type: "rabbitmq",
-						AMQPConfig: &config.AMQPConfig{
-							Host:     host,
-							Port:     port,
-							Username: username,
-							Password: password,
+						Name: "kafka-queue",
+						Type: "kafka",
+						KafkaConfig: &config.KafkaConfig{
+							Topic: "kafka-5",
+							Brokers: []string{
+								"127.0.0.1:29092",
+							},
+							Group: "test-group",
 						},
 					},
 				},
 				Queues: []*config.QueueConfig{
 					{
-						Name:     testQueueName + "-5",
-						Provider: "rabbit-queue",
+						Name:     "kafka-5",
+						Provider: "kafka-queue",
 						Retry: &config.RetryConfig{
 							Enabled:         true,
 							MaxRetries:      2,
@@ -250,7 +255,7 @@ func TestKonsumeWithRabbitMQHTTP(t *testing.T) {
 				},
 			},
 			SetupMessage: SetupMessage{
-				QueueName: testQueueName + "-5",
+				QueueName: "kafka-5",
 				Message:   []byte("{\"id\": 1, \"name\": \"test\"}"),
 			},
 			ExpectedResult: []HTTPRequestExpectation{
@@ -286,16 +291,14 @@ func TestKonsumeWithRabbitMQHTTP(t *testing.T) {
 			time.Sleep(2 * time.Second)
 
 			// Pushing the message to the queue
-			connString := fmt.Sprintf("amqp://%s:%s@%s:%d/", username, password, host, port)
-			conn, ch, err := connectToRabbitMQ(connString)
+			conn, err := connectToKafka(test.KonsumeConfig.Providers[0].KafkaConfig.Brokers[0], test.KonsumeConfig.Providers[0].KafkaConfig.Topic)
 			if err != nil {
-				t.Fatalf("Failed to connect to RabbitMQ: %v", err)
+				t.Fatalf("Failed to connect to Kafka: %v", err)
 			}
 			defer conn.Close()
-			defer ch.Close()
-			err = pushMessageToQueue(ch, test.SetupMessage.QueueName, test.SetupMessage.Message)
+			err = pushMessageToKafka(conn, test.SetupMessage.Message)
 			if err != nil {
-				t.Fatalf("Failed to push message to queue: %v", err)
+				t.Fatalf("Failed to push message to Kafka: %v", err)
 			}
 			sleep(test)
 
