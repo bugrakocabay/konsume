@@ -50,14 +50,14 @@ jobs:
         env:
           KAFKA_BROKER_ID: 1
           KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INTERNAL://localhost:29092,PLAINTEXT_EXTERNAL://localhost:9092
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INTERNAL://kafka:29092,PLAINTEXT_EXTERNAL://kafka:9092
           KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INTERNAL:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT
           KAFKA_LISTENERS: PLAINTEXT_INTERNAL://0.0.0.0:29092,PLAINTEXT_EXTERNAL://0.0.0.0:9092
           KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
           KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
           ALLOW_PLAINTEXT_LISTENER: "yes"
         options: >-
-          --health-cmd "kafka-topics.sh --bootstrap-server localhost:9092 --list"
+          --health-cmd "kafka-topics.sh --bootstrap-server kafka:29092 --list"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
