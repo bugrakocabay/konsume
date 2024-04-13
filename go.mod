@@ -8,7 +8,7 @@ require (
 	github.com/prometheus/client_golang v1.19.0
 	github.com/rabbitmq/amqp091-go v1.9.0
 	github.com/segmentio/kafka-go v0.4.47
-	go.mongodb.org/mongo-driver v1.14.0
+	go.mongodb.org/mongo-driver v1.15.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
