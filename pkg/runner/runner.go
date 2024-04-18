@@ -14,6 +14,7 @@ import (
 	"github.com/bugrakocabay/konsume/pkg/metrics"
 	"github.com/bugrakocabay/konsume/pkg/queue"
 	"github.com/bugrakocabay/konsume/pkg/requester"
+	"github.com/bugrakocabay/konsume/pkg/util"
 )
 
 // StartConsumers starts the consumers for all queues
@@ -81,17 +82,20 @@ func connectProviderWithRetry(consumer queue.MessageQueueConsumer, cfg *config.P
 // sendRequestWithStrategy attempts to send an HTTP request and retries based on the provided configuration
 func sendRequestWithStrategy(qCfg *config.QueueConfig, rCfg *config.RouteConfig, mCfg *config.MetricsConfig, requester requester.HTTPRequester) {
 	resp, err := requester.SendRequest(mCfg, rCfg.Timeout)
-	if err != nil || shouldRetry(resp, qCfg.Retry) {
-		if resp != nil && resp.StatusCode != 0 {
-			slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode)
-		} else {
-			slog.Error("Failed to send request", "route", rCfg.Name, "error", err)
+	if err != nil {
+		slog.Error("Error occurred while sending request", "route", rCfg.Name, "error", err)
+	}
+	if resp != nil {
+		body, err := util.ReadRequestBody(resp)
+		if err != nil {
+			slog.Error("Failed to read response body", "route", rCfg.Name, "error", err)
 		}
-		retryRequest(qCfg, rCfg, mCfg, requester)
+		slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode, "response", body)
 	} else {
-		if resp != nil {
-			slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode)
-		}
+		slog.Error("Received an empty response", "route", rCfg.Name)
+	}
+	if shouldRetry(resp, qCfg.Retry) {
+		retryRequest(qCfg, rCfg, mCfg, requester)
 	}
 	metrics.MessagesConsumed.Inc()
 }
@@ -110,13 +114,20 @@ func retryRequest(qCfg *config.QueueConfig, rCfg *config.RouteConfig, mCfg *conf
 		slog.Info("Retrying request", "route", rCfg.Name, "retry", i)
 		time.Sleep(calculateRetryInterval(qCfg.Retry, i))
 		resp, err := requester.SendRequest(mCfg, rCfg.Timeout)
-		if err == nil && !shouldRetry(resp, qCfg.Retry) {
-			if resp != nil {
-				slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode)
+		if err != nil {
+			slog.Error("Error occurred while retrying the request", "route", rCfg.Name, "error", err)
+		}
+		if resp != nil {
+			body, err := util.ReadRequestBody(resp)
+			if err != nil {
+				slog.Error("Failed to read response body", "route", rCfg.Name, "error", err)
 			}
-			return
+			slog.Info("Received a response from retry", "route", rCfg.Name, "status", resp.StatusCode, "response", body)
+			if !shouldRetry(resp, qCfg.Retry) {
+				return
+			}
 		} else {
-			slog.Error("Failed to send request", "route", rCfg.Name, "error", err)
+			slog.Error("Received an empty response from retry", "route", rCfg.Name)
 		}
 	}
 }
