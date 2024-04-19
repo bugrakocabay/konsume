@@ -4,11 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"math/rand"
+	"net/http"
 	"runtime"
+	"time"
 
 	"github.com/bugrakocabay/konsume/pkg/common"
 	"github.com/bugrakocabay/konsume/pkg/config"
 	"github.com/bugrakocabay/konsume/pkg/database"
+	"github.com/bugrakocabay/konsume/pkg/metrics"
 	"github.com/bugrakocabay/konsume/pkg/queue"
 	"github.com/bugrakocabay/konsume/pkg/requester"
 	"github.com/bugrakocabay/konsume/pkg/util"
@@ -83,6 +87,74 @@ func handleDatabaseRoutes(qCfg *config.QueueConfig, messageData map[string]inter
 		if err := db.Insert(messageData, *dbRoute); err != nil {
 			slog.Error("Failed to insert data into database", "error", err)
 		}
+	}
+}
+
+// sendRequestWithStrategy attempts to send an HTTP request and retries based on the provided configuration
+func sendRequestWithStrategy(qCfg *config.QueueConfig, rCfg *config.RouteConfig, mCfg *config.MetricsConfig, requester requester.HTTPRequester) {
+	resp, err := requester.SendRequest(mCfg, rCfg.Timeout)
+	if err != nil {
+		slog.Error("Error occurred while sending request", "route", rCfg.Name, "error", err)
+	}
+	if resp != nil {
+		body, err := util.ReadRequestBody(resp)
+		if err != nil {
+			slog.Error("Failed to read response body", "route", rCfg.Name, "error", err)
+		}
+		slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode, "response", body)
+	} else {
+		slog.Error("Received an empty response", "route", rCfg.Name)
+	}
+	if shouldRetry(resp, qCfg.Retry) {
+		retryRequest(qCfg, rCfg, mCfg, requester)
+	}
+	metrics.MessagesConsumed.Inc()
+}
+
+// shouldRetry determines whether a request should be retried based on the response and retry configuration
+func shouldRetry(resp *http.Response, retryConfig *config.RetryConfig) bool {
+	if retryConfig == nil || !retryConfig.Enabled {
+		return false
+	}
+	return resp == nil || resp.StatusCode >= retryConfig.ThresholdStatus
+}
+
+// retryRequest handles the retry logic for a request, attempting retries as configured
+func retryRequest(qCfg *config.QueueConfig, rCfg *config.RouteConfig, mCfg *config.MetricsConfig, requester requester.HTTPRequester) {
+	for i := 1; i <= qCfg.Retry.MaxRetries; i++ {
+		slog.Info("Retrying request", "route", rCfg.Name, "retry", i)
+		time.Sleep(calculateRetryInterval(qCfg.Retry, i))
+		resp, err := requester.SendRequest(mCfg, rCfg.Timeout)
+		if err != nil {
+			slog.Error("Error occurred while retrying the request", "route", rCfg.Name, "error", err)
+		}
+		if resp != nil {
+			body, err := util.ReadRequestBody(resp)
+			if err != nil {
+				slog.Error("Failed to read response body", "route", rCfg.Name, "error", err)
+			}
+			slog.Info("Received a response from retry", "route", rCfg.Name, "status", resp.StatusCode, "response", body)
+			if !shouldRetry(resp, qCfg.Retry) {
+				return
+			}
+		} else {
+			slog.Error("Received an empty response from retry", "route", rCfg.Name)
+		}
+	}
+}
+
+// calculateRetryInterval computes the time to wait before a retry attempt based on the retry strategy
+func calculateRetryInterval(retryConfig *config.RetryConfig, attempt int) time.Duration {
+	switch retryConfig.Strategy {
+	case common.RetryStrategyFixed:
+		return retryConfig.Interval
+	case common.RetryStrategyExpo:
+		return retryConfig.Interval * time.Duration(attempt)
+	case common.RetryStrategyRand:
+		return time.Duration(rand.Intn(int(retryConfig.Interval)))
+	default:
+		slog.Error("Invalid retry strategy", "strategy", retryConfig.Strategy)
+		return 0
 	}
 }
 
