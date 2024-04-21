@@ -3,6 +3,7 @@ package runner
 import (
 	"fmt"
 	"log/slog"
+	"runtime"
 	"sync"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 // StartConsumers starts the consumers for all queues
 func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueConsumer, providers map[string]*config.ProviderConfig, databases map[string]database.Database) error {
 	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, runtime.NumCPU()*2) // Global semaphore for all goroutines
 
 	for _, qCfg := range cfg.Queues {
 		consumer, ok := consumers[qCfg.Provider]
@@ -29,7 +31,11 @@ func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueC
 		wg.Add(1)
 		go func(c queue.MessageQueueConsumer, qc *config.QueueConfig, pc *config.ProviderConfig) {
 			defer wg.Done()
+			semaphore <- struct{}{}        // Acquire a semaphore slot before processing
+			defer func() { <-semaphore }() // Release the semaphore slot once done
+
 			if err := connectProviderWithRetry(c, pc); err != nil {
+				slog.Error("Failed to connect provider", "queue", qc.Name, "error", err)
 				return
 			}
 			if err := listenAndProcess(c, qc, cfg.Metrics, databases); err != nil {
