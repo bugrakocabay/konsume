@@ -71,7 +71,6 @@ func (r *Requester) SendRequest(m *config.MetricsConfig, timeout time.Duration) 
 		}
 		return resp, err
 	}
-	defer resp.Body.Close()
 
 	if m != nil && m.Enabled {
 		metrics.HttpRequestsMade.Inc()

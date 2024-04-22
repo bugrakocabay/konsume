@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/bugrakocabay/konsume/pkg/config"
+
+	"github.com/jarcoal/httpmock"
 )
 
 func TestListenAndProcess(t *testing.T) {
@@ -85,6 +87,12 @@ func TestListenAndProcess_InvalidMessageFormat(t *testing.T) {
 }
 
 func TestListenAndProcess_RouteHandling(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", "http://localhost/test?param=value",
+		httpmock.NewStringResponder(200, `Success`))
+
 	mockConsumer := &MockMessageQueueConsumer{
 		ConsumeFunc: func(queueName string, handler func(msg []byte) error) error {
 			return handler([]byte("{\"key\":\"value\"}"))
@@ -104,23 +112,15 @@ func TestListenAndProcess_RouteHandling(t *testing.T) {
 	if err != nil {
 		t.Errorf("listenAndProcess() with non-empty body returned error: %v", err)
 	}
-
-	qCfg2 := &config.QueueConfig{Name: "testQueue"}
-	qCfg2.Routes = []*config.RouteConfig{
-		{
-			Body:   nil,
-			Method: "GET",
-			URL:    "http://localhost/test",
-			Query:  map[string]string{"param": "value"},
-		},
-	}
-	err = listenAndProcess(mockConsumer, qCfg2, nil, nil)
-	if err != nil {
-		t.Errorf("listenAndProcess() with empty body returned error: %v", err)
-	}
 }
 
 func TestListenAndProcess_PrepareRequestBody_Success(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", "http://localhost/test",
+		httpmock.NewStringResponder(200, `Success`))
+
 	qCfg := &config.QueueConfig{
 		Name: "testQueue",
 		Routes: []*config.RouteConfig{

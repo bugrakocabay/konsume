@@ -8,7 +8,7 @@ require (
 	github.com/prometheus/client_golang v1.19.0
 	github.com/rabbitmq/amqp091-go v1.9.0
 	github.com/segmentio/kafka-go v0.4.47
-	go.mongodb.org/mongo-driver v1.14.0
+	go.mongodb.org/mongo-driver v1.15.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -16,6 +16,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
+	github.com/jarcoal/httpmock v1.3.1 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
@@ -30,5 +31,5 @@ require (
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	google.golang.org/protobuf v1.32.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 )

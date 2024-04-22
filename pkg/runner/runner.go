@@ -3,22 +3,19 @@ package runner
 import (
 	"fmt"
 	"log/slog"
-	"math/rand"
-	"net/http"
+	"runtime"
 	"sync"
 	"time"
 
-	"github.com/bugrakocabay/konsume/pkg/common"
 	"github.com/bugrakocabay/konsume/pkg/config"
 	"github.com/bugrakocabay/konsume/pkg/database"
-	"github.com/bugrakocabay/konsume/pkg/metrics"
 	"github.com/bugrakocabay/konsume/pkg/queue"
-	"github.com/bugrakocabay/konsume/pkg/requester"
 )
 
 // StartConsumers starts the consumers for all queues
 func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueConsumer, providers map[string]*config.ProviderConfig, databases map[string]database.Database) error {
 	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, runtime.NumCPU()*2) // Global semaphore for all goroutines
 
 	for _, qCfg := range cfg.Queues {
 		consumer, ok := consumers[qCfg.Provider]
@@ -34,7 +31,11 @@ func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueC
 		wg.Add(1)
 		go func(c queue.MessageQueueConsumer, qc *config.QueueConfig, pc *config.ProviderConfig) {
 			defer wg.Done()
+			semaphore <- struct{}{}        // Acquire a semaphore slot before processing
+			defer func() { <-semaphore }() // Release the semaphore slot once done
+
 			if err := connectProviderWithRetry(c, pc); err != nil {
+				slog.Error("Failed to connect provider", "queue", qc.Name, "error", err)
 				return
 			}
 			if err := listenAndProcess(c, qc, cfg.Metrics, databases); err != nil {
@@ -76,62 +77,4 @@ func connectProviderWithRetry(consumer queue.MessageQueueConsumer, cfg *config.P
 		return err
 	}
 	return err
-}
-
-// sendRequestWithStrategy attempts to send an HTTP request and retries based on the provided configuration
-func sendRequestWithStrategy(qCfg *config.QueueConfig, rCfg *config.RouteConfig, mCfg *config.MetricsConfig, requester requester.HTTPRequester) {
-	resp, err := requester.SendRequest(mCfg, rCfg.Timeout)
-	if err != nil || shouldRetry(resp, qCfg.Retry) {
-		if resp != nil && resp.StatusCode != 0 {
-			slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode)
-		} else {
-			slog.Error("Failed to send request", "route", rCfg.Name, "error", err)
-		}
-		retryRequest(qCfg, rCfg, mCfg, requester)
-	} else {
-		if resp != nil {
-			slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode)
-		}
-	}
-	metrics.MessagesConsumed.Inc()
-}
-
-// shouldRetry determines whether a request should be retried based on the response and retry configuration
-func shouldRetry(resp *http.Response, retryConfig *config.RetryConfig) bool {
-	if retryConfig == nil || !retryConfig.Enabled {
-		return false
-	}
-	return resp == nil || resp.StatusCode >= retryConfig.ThresholdStatus
-}
-
-// retryRequest handles the retry logic for a request, attempting retries as configured
-func retryRequest(qCfg *config.QueueConfig, rCfg *config.RouteConfig, mCfg *config.MetricsConfig, requester requester.HTTPRequester) {
-	for i := 1; i <= qCfg.Retry.MaxRetries; i++ {
-		slog.Info("Retrying request", "route", rCfg.Name, "retry", i)
-		time.Sleep(calculateRetryInterval(qCfg.Retry, i))
-		resp, err := requester.SendRequest(mCfg, rCfg.Timeout)
-		if err == nil && !shouldRetry(resp, qCfg.Retry) {
-			if resp != nil {
-				slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode)
-			}
-			return
-		} else {
-			slog.Error("Failed to send request", "route", rCfg.Name, "error", err)
-		}
-	}
-}
-
-// calculateRetryInterval computes the time to wait before a retry attempt based on the retry strategy
-func calculateRetryInterval(retryConfig *config.RetryConfig, attempt int) time.Duration {
-	switch retryConfig.Strategy {
-	case common.RetryStrategyFixed:
-		return retryConfig.Interval
-	case common.RetryStrategyExpo:
-		return retryConfig.Interval * time.Duration(attempt)
-	case common.RetryStrategyRand:
-		return time.Duration(rand.Intn(int(retryConfig.Interval)))
-	default:
-		slog.Error("Invalid retry strategy", "strategy", retryConfig.Strategy)
-		return 0
-	}
 }
