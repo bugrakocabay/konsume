@@ -36,7 +36,7 @@
 
 **TLDR;** If you want to consume messages from message queues such as RabbitMQ or Kafka and perform HTTP requests or insert data to a database based on configurations, konsume is for you.
 
-komsume is a tool that easily connects message queues like RabbitMQ and Kafka with web services, automating data-driven actions. It bridges complex messaging systems and web APIs or databases. Its flexible setup, including various retry options and customizable request formats, suits a range of uses, from basic data transfers to intricate processing tasks.
+konsume is a tool that easily connects message queues like RabbitMQ and Kafka with web services, automating data-driven actions. It bridges complex messaging systems and web APIs or databases. Its flexible setup, including various retry options and customizable request formats, suits a range of uses, from basic data transfers to intricate processing tasks.
 
 <p align="center">
     <img src=".github/assets/diagram.png" alt="konsume diagram" />
