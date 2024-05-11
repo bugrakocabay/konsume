@@ -4,9 +4,10 @@ go 1.21
 
 require (
 	github.com/go-stomp/stomp/v3 v3.1.0
+	github.com/jarcoal/httpmock v1.3.1
 	github.com/lib/pq v1.10.9
 	github.com/prometheus/client_golang v1.19.0
-	github.com/rabbitmq/amqp091-go v1.9.0
+	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/segmentio/kafka-go v0.4.47
 	go.mongodb.org/mongo-driver v1.15.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -16,7 +17,6 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/jarcoal/httpmock v1.3.1 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
