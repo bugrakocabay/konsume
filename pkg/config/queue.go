@@ -54,7 +54,7 @@ type RetryConfig struct {
 	Enabled bool `yaml:"enabled,omitempty" json:"enabled,omitempty"`
 
 	// MaxRetries is the maximum number of retries for the queue
-	MaxRetries int `yaml:"max_retries" json:"max_retries"`
+	MaxRetries int `yaml:"max-retries" json:"max-retries"`
 
 	// Strategy is the retry strategy for the queue, defaults to "fixed"
 	Strategy string `yaml:"strategy,omitempty" json:"strategy,omitempty"`
@@ -63,7 +63,7 @@ type RetryConfig struct {
 	Interval time.Duration `yaml:"interval,omitempty" json:"interval,omitempty"`
 
 	// ThresholdStatus is the minimum status code that will trigger a retry, defaults to 500
-	ThresholdStatus int `yaml:"threshold_status,omitempty" json:"threshold_status,omitempty"`
+	ThresholdStatus int `yaml:"threshold-status,omitempty" json:"threshold-status,omitempty"`
 }
 
 // RouteConfig is the main configuration information needed to send a message to a service

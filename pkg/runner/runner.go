@@ -31,8 +31,8 @@ func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueC
 		wg.Add(1)
 		go func(c queue.MessageQueueConsumer, qc *config.QueueConfig, pc *config.ProviderConfig) {
 			defer wg.Done()
-			semaphore <- struct{}{}        // Acquire a semaphore slot before processing
-			defer func() { <-semaphore }() // Release the semaphore slot once done
+			semaphore <- struct{}{}
+			defer func() { <-semaphore }()
 
 			if err := connectProviderWithRetry(c, pc); err != nil {
 				slog.Error("Failed to connect provider", "queue", qc.Name, "error", err)

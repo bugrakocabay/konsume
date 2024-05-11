@@ -21,7 +21,7 @@ type MetricsConfig struct {
 	Path string `yaml:"path,omitempty" json:"path,omitempty"`
 
 	// ThresholdStatus is the minimum status code that will increase failure count, defaults to 500
-	ThresholdStatus int `yaml:"threshold_status,omitempty" json:"threshold_status,omitempty"`
+	ThresholdStatus int `yaml:"threshold-status,omitempty" json:"threshold-status,omitempty"`
 }
 
 // ValidateAll validates the configuration and returns default values if necessary
