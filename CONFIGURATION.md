@@ -46,9 +46,9 @@ All the available configuration options are listed below. The configuration file
 | `queues.retry`                           | Retry mechanism for queue                                                                                        | no                                  |
 | `queues.retry.enabled`                   | Flag for enabling/disabling retry mechanism                                                                      | yes (if retry is enabled)           |
 | `queues.retry.strategy`                  | Type of the retry mechanism. Supported types are `fixed`, `expo`, and `random`                                   | no (defaults to fixed)              |
-| `queues.retry.max_retries`               | Maximum amount of times that retrying will be triggered                                                          | yes (if retry is enabled)           |
+| `queues.retry.max-retries`               | Maximum amount of times that retrying will be triggered                                                          | yes (if retry is enabled)           |
 | `queues.retry.interval`                  | Amount of time between retries                                                                                   | yes (if retry is enabled)           |
-| `queues.retry.threshold_status`          | Minimum HTTP status code to trigger retry mechanism, any status code above or equal this will trigger retrying   | no (defaults to 500)                |
+| `queues.retry.threshold-status`          | Minimum HTTP status code to trigger retry mechanism, any status code above or equal this will trigger retrying   | no (defaults to 500)                |
 | `queues.routes`                          | List of configuration for routes                                                                                 | yes                                 |
 | `queues.routes.name`                     | Name of the route                                                                                                | yes                                 |
 | `queues.routes.type`                     | Type of the route.                                                                                               | no (defaults to REST)               |
@@ -134,9 +134,9 @@ queues:
     retry:
       enabled: true
       strategy: "fixed"
-      max_retries: 3
+      max-retries: 3
       interval: "5s"
-      threshold_status: 500
+      threshold-status: 500
     routes:
       - name: "rest-route"
         type: "REST"

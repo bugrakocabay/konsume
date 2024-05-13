@@ -15,8 +15,8 @@ queues:
     provider: "kafka-queue"
     retry:
       enabled: true
-      threshold_status: 500
-      max_retries: 2
+      threshold-status: 500
+      max-retries: 2
       interval: 5s
       strategy: "fixed"
     routes:

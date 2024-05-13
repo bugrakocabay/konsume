@@ -220,7 +220,7 @@ routes:
 
 <details>
 <summary> <b>How does the retry mechanism work?</b> </summary>
-konsume supports three different retry strategies: <code>fixed</code>, <code>expo</code>, and <code>random</code>. You can define the retry strategy in the <code>retry</code> section of the queue configuration. If you want to enable retrying, you should set the <code>enabled</code> flag to <code>true</code>. You can also define the maximum amount of times that retrying will be triggered using the <code>max_retries</code> key. The <code>interval</code> key defines the amount of time between retries. The <code>threshold_status</code> key defines the minimum HTTP status code to trigger retry mechanism, any status code above or equal this will trigger retrying. If you don't define the <code>threshold_status</code> key, it will default to <code>500</code>.
+konsume supports three different retry strategies: <code>fixed</code>, <code>expo</code>, and <code>random</code>. You can define the retry strategy in the <code>retry</code> section of the queue configuration. If you want to enable retrying, you should set the <code>enabled</code> flag to <code>true</code>. You can also define the maximum amount of times that retrying will be triggered using the <code>max-retries</code> key. The <code>interval</code> key defines the amount of time between retries. The <code>threshold-status</code> key defines the minimum HTTP status code to trigger retry mechanism, any status code above or equal this will trigger retrying. If you don't define the <code>threshold-status</code> key, it will default to <code>500</code>.
 
 ```yaml
 queues:
@@ -229,9 +229,9 @@ queues:
     retry:
       enabled: true
       strategy: 'fixed'
-      max_retries: 5
+      max-retries: 5
       interval: 5s
-      threshold_status: 500
+      threshold-status: 500
     routes:
       - name: 'ServiceA_Queue2'
         type: 'REST'

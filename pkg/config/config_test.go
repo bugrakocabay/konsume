@@ -559,7 +559,7 @@ queues:
     provider: "test-queue"
     retry:
       enabled: true
-      max_retries: 2
+      max-retries: 2
     routes:
       - name: "test-route"
         url: "http://localhost:8080"
@@ -585,7 +585,7 @@ queues:
     provider: "test-queue"
     retry:
       enabled: true
-      max_retries: 2
+      max-retries: 2
       interval: 1s
       strategy: "invalid-strategy"
     routes:
@@ -613,9 +613,9 @@ queues:
     provider: "test-queue"
     retry:
       enabled: true
-      max_retries: 2
+      max-retries: 2
       interval: 1s
-      threshold_status: 500
+      threshold-status: 500
     routes:
       - name: "test-route"
         url: "http://localhost:8080"
@@ -681,7 +681,7 @@ queues:
     provider: "test-queue"
     retry:
       enabled: true
-      max_retries: 2
+      max-retries: 2
       interval: 1s
     routes:
       - name: "test-route"
@@ -804,7 +804,7 @@ queues:
     provider: "test-queue"
     retry:
       enabled: true
-      max_retries: 2
+      max-retries: 2
       interval: 1s
     routes:
       - name: "test-route"
