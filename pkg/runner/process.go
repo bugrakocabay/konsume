@@ -18,7 +18,12 @@ import (
 )
 
 // listenAndProcess listens the queue and processes the messages
-func listenAndProcess(consumer queue.MessageQueueConsumer, qCfg *config.QueueConfig, mCfg *config.MetricsConfig, databases map[string]database.Database) error {
+func listenAndProcess(
+	consumer queue.MessageQueueConsumer,
+	qCfg *config.QueueConfig,
+	mCfg *config.MetricsConfig,
+	databases map[string]database.Database,
+) error {
 	return consumer.Consume(qCfg.Name, func(msg []byte) error {
 		slog.Info("Received a message", "queue", qCfg.Name, "message", string(msg))
 		err := processMessage(msg, qCfg, mCfg, databases)
@@ -31,7 +36,11 @@ func listenAndProcess(consumer queue.MessageQueueConsumer, qCfg *config.QueueCon
 }
 
 // processMessage processes the message by sending requests and inserting data into databases
-func processMessage(msg []byte, qCfg *config.QueueConfig, mCfg *config.MetricsConfig, databases map[string]database.Database) error {
+func processMessage(
+	msg []byte, qCfg *config.QueueConfig,
+	mCfg *config.MetricsConfig,
+	databases map[string]database.Database,
+) error {
 	messageData, err := util.ParseJSONToMap(msg)
 	if err != nil {
 		return err
@@ -46,7 +55,10 @@ func processMessage(msg []byte, qCfg *config.QueueConfig, mCfg *config.MetricsCo
 }
 
 // handleRoutes sends requests to the routes defined in the queue config
-func handleRoutes(qCfg *config.QueueConfig, messageData map[string]interface{}, msg []byte, mCfg *config.MetricsConfig) error {
+func handleRoutes(qCfg *config.QueueConfig,
+	messageData map[string]interface{},
+	msg []byte, mCfg *config.MetricsConfig,
+) error {
 	if qCfg.Routes == nil {
 		return nil
 	}
@@ -69,11 +81,16 @@ func handleRoutes(qCfg *config.QueueConfig, messageData map[string]interface{}, 
 			return err
 		}
 	}
+
 	return nil
 }
 
 // handleDatabaseRoutes inserts data into the databases defined in the queue config
-func handleDatabaseRoutes(qCfg *config.QueueConfig, messageData map[string]interface{}, databases map[string]database.Database) {
+func handleDatabaseRoutes(
+	qCfg *config.QueueConfig,
+	messageData map[string]interface{},
+	databases map[string]database.Database,
+) {
 	if qCfg.DatabaseRoutes == nil {
 		return
 	}
@@ -90,7 +107,11 @@ func handleDatabaseRoutes(qCfg *config.QueueConfig, messageData map[string]inter
 }
 
 // sendRequestWithStrategy attempts to send an HTTP request and retries based on the provided configuration
-func sendRequestWithStrategy(qCfg *config.QueueConfig, rCfg *config.RouteConfig, mCfg *config.MetricsConfig, requester requester.HTTPRequester) error {
+func sendRequestWithStrategy(qCfg *config.QueueConfig,
+	rCfg *config.RouteConfig,
+	mCfg *config.MetricsConfig,
+	requester requester.HTTPRequester,
+) error {
 	resp, err := requester.SendRequest(mCfg, rCfg.Timeout)
 	if err != nil {
 		slog.Error("Error occurred while sending request", "route", rCfg.Name, "error", err)
@@ -102,7 +123,8 @@ func sendRequestWithStrategy(qCfg *config.QueueConfig, rCfg *config.RouteConfig,
 			slog.Error("Failed to read response body", "route", rCfg.Name, "error", err)
 			return err
 		}
-		slog.Info("Received a response from", "route", rCfg.Name, "status", resp.StatusCode, "response", body)
+		slog.Info("Received a response from",
+			"route", rCfg.Name, "status", resp.StatusCode, "response", body)
 		if shouldRetry(resp, qCfg.Retry) {
 			if err = retryRequest(qCfg, rCfg, mCfg, requester); err != nil {
 				return err
@@ -115,6 +137,7 @@ func sendRequestWithStrategy(qCfg *config.QueueConfig, rCfg *config.RouteConfig,
 	}
 
 	metrics.MessagesConsumed.Inc()
+
 	return nil
 }
 
@@ -127,7 +150,11 @@ func shouldRetry(resp *http.Response, retryConfig *config.RetryConfig) bool {
 }
 
 // retryRequest handles the retry logic for a request, attempting retries as configured
-func retryRequest(qCfg *config.QueueConfig, rCfg *config.RouteConfig, mCfg *config.MetricsConfig, requester requester.HTTPRequester) error {
+func retryRequest(qCfg *config.QueueConfig,
+	rCfg *config.RouteConfig,
+	mCfg *config.MetricsConfig,
+	requester requester.HTTPRequester,
+) error {
 	for i := 1; i <= qCfg.Retry.MaxRetries; i++ {
 		slog.Info("Retrying request", "route", rCfg.Name, "retry", i)
 		time.Sleep(calculateRetryInterval(qCfg.Retry, i))
@@ -148,6 +175,7 @@ func retryRequest(qCfg *config.QueueConfig, rCfg *config.RouteConfig, mCfg *conf
 			slog.Error("Received an empty response from retry", "route", rCfg.Name)
 		}
 	}
+
 	return fmt.Errorf("failed to send request after %d retries", qCfg.Retry.MaxRetries)
 }
 
@@ -201,6 +229,7 @@ func getGraphQLOperation(bodyMap map[string]interface{}) string {
 	if operation, ok := bodyMap["mutation"].(string); ok {
 		return operation
 	}
+
 	return ""
 }
 
@@ -213,5 +242,6 @@ func appendQueryParams(url string, queryParams map[string]string) string {
 	for key, value := range queryParams {
 		url += fmt.Sprintf("%s=%s&", key, value)
 	}
+
 	return url[:len(url)-1]
 }

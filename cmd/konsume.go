@@ -33,7 +33,7 @@ func Execute() {
 	providerMap := make(map[string]*config.ProviderConfig)
 
 	initProviders(cfg, consumerMap, providerMap)
-	databaseMap, err := initDatabases(cfg)
+	databaseMap, err := initDatabases(cfg.Databases)
 	if err != nil {
 		slog.Error("Failed to initialize databases", "error", err)
 		return
@@ -72,7 +72,11 @@ func setupLogger(cfg *config.Config) {
 }
 
 // initProviders initializes the consumers for each provider
-func initProviders(cfg *config.Config, consumers map[string]queue.MessageQueueConsumer, providerMap map[string]*config.ProviderConfig) {
+func initProviders(
+	cfg *config.Config,
+	consumers map[string]queue.MessageQueueConsumer,
+	providerMap map[string]*config.ProviderConfig,
+) {
 	factories := map[string]queue.Factory{
 		common.QueueSourceRabbitMQ: rabbitmq.NewConsumerFactory,
 		common.QueueSourceKafka:    kafka.NewConsumerFactory,
@@ -98,9 +102,9 @@ func initProviders(cfg *config.Config, consumers map[string]queue.MessageQueueCo
 }
 
 // initDatabases initializes the databases based on the configuration
-func initDatabases(cfg *config.Config) (map[string]database.Database, error) {
+func initDatabases(cfg []*config.DatabaseConfig) (map[string]database.Database, error) {
 	dbMap := make(map[string]database.Database)
-	for _, dbConfig := range cfg.Databases {
+	for _, dbConfig := range cfg {
 		db, err := database.LoadDatabasePlugin(dbConfig.Type)
 		if err != nil {
 			slog.Error("Failed to load database plugin", "type", dbConfig.Type, "error", err)
@@ -116,7 +120,7 @@ func initDatabases(cfg *config.Config) (map[string]database.Database, error) {
 	return dbMap, nil
 }
 
-// connectDbRetry attempts to connect to the database with retry logic.
+// connectDbRetry attempts to connect to the database with retry logic
 func connectDbRetry(db database.Database, dbConfig config.DatabaseConfig) error {
 	var err error
 	for attempt := 0; attempt <= dbConfig.Retry; attempt++ {
@@ -132,7 +136,7 @@ func connectDbRetry(db database.Database, dbConfig config.DatabaseConfig) error 
 	return err
 }
 
-// setupSignalHandling configures the signal handling for os.Interrupt and syscall.SIGTERM.
+// setupSignalHandling configures the signal handling for os.Interrupt and syscall.SIGTERM
 func setupSignalHandling() chan bool {
 	done := make(chan bool, 1)
 	signalChannel := make(chan os.Signal, 1)
@@ -147,7 +151,7 @@ func setupSignalHandling() chan bool {
 	return done
 }
 
-// waitForShutdown blocks until a shutdown signal is received.
+// waitForShutdown blocks until a shutdown signal is received
 func waitForShutdown(done chan bool) {
 	<-done
 }

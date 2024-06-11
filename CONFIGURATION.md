@@ -37,7 +37,7 @@ All the available configuration options are listed below. The configuration file
 | `providers.stomp-config.password`        | Password for the ActiveMQ server                                                                                 | yes (if type is activemq)           |
 | `databases`                              | List of configuration for databases                                                                              | no                                  |
 | `databases.name`                         | Name of the database                                                                                             | yes (if database is used)           |
-| `databases.type`                         | Type of the database. Only `postgresql` is supported.                                                            | yes (if database is used)           |
+| `databases.type`                         | Type of the database. `postgresql` and `mongodb` is supported.                                                   | yes (if database is used)           |
 | `databases.connection-string`            | Connection string used to connect to given database                                                              | yes (if database is used)           |
 | `databases.retry`                        | Amount of times to retry connecting to database                                                                  | no                                  |
 | `queues`                                 | List of configuration for queues                                                                                 | yes                                 |

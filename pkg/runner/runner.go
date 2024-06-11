@@ -13,9 +13,14 @@ import (
 )
 
 // StartConsumers starts the consumers for all queues
-func StartConsumers(cfg *config.Config, consumers map[string]queue.MessageQueueConsumer, providers map[string]*config.ProviderConfig, databases map[string]database.Database) error {
+func StartConsumers(
+	cfg *config.Config,
+	consumers map[string]queue.MessageQueueConsumer,
+	providers map[string]*config.ProviderConfig,
+	databases map[string]database.Database,
+) error {
 	var wg sync.WaitGroup
-	semaphore := make(chan struct{}, runtime.NumCPU()*2) // Global semaphore for all goroutines
+	semaphore := make(chan struct{}, runtime.NumCPU()*2)
 
 	for _, qCfg := range cfg.Queues {
 		consumer, ok := consumers[qCfg.Provider]
