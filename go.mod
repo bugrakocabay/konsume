@@ -3,7 +3,7 @@ module github.com/bugrakocabay/konsume
 go 1.21
 
 require (
-	github.com/go-stomp/stomp/v3 v3.1.0
+	github.com/go-stomp/stomp/v3 v3.1.1
 	github.com/jarcoal/httpmock v1.3.1
 	github.com/lib/pq v1.10.9
 	github.com/prometheus/client_golang v1.19.1
